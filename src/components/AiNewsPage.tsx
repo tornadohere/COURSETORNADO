@@ -34,12 +34,11 @@ const METRIC_ICONS: Record<BenchmarkMetricId, React.ElementType> = {
   "mmlu-pro": BookOpen,
 };
 
-function formatDate(iso: string, isEn: boolean): string {
+function formatShortDate(iso: string, isEn: boolean): string {
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;
     return new Intl.DateTimeFormat(isEn ? "en-US" : "ar-EG", {
-      year: "numeric",
       month: "short",
       day: "numeric",
     }).format(d);
@@ -57,6 +56,11 @@ function getCreatorTone(creator: string): string {
   if (c.includes("deepseek")) return "deepseek";
   if (c.includes("meta")) return "meta";
   return "other";
+}
+
+function computeBarPercent(score: number): number {
+  if (!Number.isFinite(score) || score <= 0) return 6;
+  return Math.min(100, Math.max(8, Math.round(score)));
 }
 
 function AiNewsContent({
@@ -99,7 +103,6 @@ function AiNewsContent({
     [cache]
   );
 
-  const topScore = currentData.models[0]?.score || 100;
   const uniqueCreators = useMemo(() => {
     const set = new Set(currentData.models.map((m) => m.creator));
     return set.size;
@@ -124,7 +127,7 @@ function AiNewsContent({
                 <span>{isEn ? "Back to Tornado Academy" : "العودة إلى Tornado Academy"}</span>
               </Link>
 
-              <span className="ta-vault-eyebrow">
+              <span className="ta-bench-eyebrow">
                 <Activity size={13} strokeWidth={2.2} aria-hidden="true" />
                 <span>
                   {isEn
@@ -134,7 +137,7 @@ function AiNewsContent({
               </span>
             </div>
 
-            <div className="ta-vault-head">
+            <div className="ta-vault-head ta-bench-head">
               <h1 className="ta-vault-page-title">
                 {isEn
                   ? "AI News & Top 10 LLMs in the World"
@@ -147,15 +150,19 @@ function AiNewsContent({
               </p>
             </div>
 
-            <div className="ta-vault-stats-strip">
+            <div className="ta-vault-stats-strip ta-bench-stats-strip">
               <div className="ta-vault-stat">
                 <strong>#1</strong>
-                <span>{currentData.models[0]?.name || "—"}</span>
+                <span className="ta-bench-stat-model">
+                  <bdi dir="ltr">{currentData.models[0]?.name || "—"}</bdi>
+                </span>
               </div>
               <div className="ta-vault-stat">
                 <strong>
-                  {currentData.models[0]?.score ?? "—"}
-                  {currentMeta.unit === "%" ? "%" : ""}
+                  <bdi dir="ltr">
+                    {currentData.models[0]?.score ?? "—"}
+                    {currentMeta.unit === "%" ? "%" : ""}
+                  </bdi>
                 </strong>
                 <span>{isEn ? "Top Benchmark Score" : "أعلى نتيجة في المؤشر"}</span>
               </div>
@@ -164,7 +171,9 @@ function AiNewsContent({
                 <span>{isEn ? "AI Labs in Top 10" : "شركات AI في التوب 10"}</span>
               </div>
               <div className="ta-vault-stat">
-                <strong>{formatDate(currentData.generatedAt, isEn)}</strong>
+                <strong className="ta-bench-stat-date">
+                  {formatShortDate(currentData.generatedAt, isEn)}
+                </strong>
                 <span>{isEn ? "Last Benchmark Sync" : "آخر تحديث للبيانات"}</span>
               </div>
             </div>
@@ -193,7 +202,7 @@ function AiNewsContent({
                       data-active={isActive}
                       onClick={() => loadMetric(metric.id)}
                     >
-                      <Icon size={15} strokeWidth={2} aria-hidden="true" />
+                      <Icon size={14} strokeWidth={2} aria-hidden="true" />
                       <span>{isEn ? metric.labelEn : metric.labelAr}</span>
                     </button>
                   );
@@ -225,7 +234,7 @@ function AiNewsContent({
             {/* Top 3 Podium Cards */}
             <div className="ta-bench-podium" data-loading={loading || undefined}>
               {topThree.map((model, idx) => {
-                const pct = topScore > 0 ? Math.max(8, Math.round((model.score / topScore) * 100)) : 100;
+                const pct = computeBarPercent(model.score);
                 const tone = getCreatorTone(model.creator);
                 return (
                   <article
@@ -247,14 +256,16 @@ function AiNewsContent({
                       </span>
                     </div>
 
-                    <h2 className="ta-bench-podium-name" dir="ltr">
-                      {model.name}
+                    <h2 className="ta-bench-podium-name">
+                      <bdi dir="ltr">{model.name}</bdi>
                     </h2>
 
-                    <div className="ta-bench-podium-score-row" dir="ltr">
+                    <div className="ta-bench-podium-score-row">
                       <strong>
-                        {model.score}
-                        {currentMeta.unit === "%" ? "%" : ""}
+                        <bdi dir="ltr">
+                          {model.score}
+                          {currentMeta.unit === "%" ? "%" : ""}
+                        </bdi>
                       </strong>
                       <span>
                         {currentMeta.unit === "%"
@@ -286,7 +297,7 @@ function AiNewsContent({
                   {isEn ? "Provider" : "الشركة المطوّرة"}
                 </span>
                 <span className="ta-bench-col-bar">
-                  {isEn ? "Relative Strength" : "الأداء النسبي"}
+                  {isEn ? "Score Scale" : "مقياس الأداء"}
                 </span>
                 <span className="ta-bench-col-score">
                   {isEn ? "Score" : "النتيجة"}
@@ -295,10 +306,7 @@ function AiNewsContent({
 
               <ol className="ta-bench-rows">
                 {currentData.models.map((model) => {
-                  const pct =
-                    topScore > 0
-                      ? Math.max(8, Math.round((model.score / topScore) * 100))
-                      : 100;
+                  const pct = computeBarPercent(model.score);
                   const tone = getCreatorTone(model.creator);
                   return (
                     <li
@@ -312,8 +320,15 @@ function AiNewsContent({
                         </span>
                       </span>
 
-                      <span className="ta-bench-col-model" dir="ltr">
-                        <strong>{model.name}</strong>
+                      <span className="ta-bench-col-model">
+                        <strong>
+                          <bdi dir="ltr">{model.name}</bdi>
+                        </strong>
+                        <span
+                          className={`ta-bench-creator-chip ta-bench-mobile-creator ta-bench-creator--${tone}`}
+                        >
+                          {model.creator}
+                        </span>
                       </span>
 
                       <span className="ta-bench-col-creator">
@@ -328,10 +343,12 @@ function AiNewsContent({
                         </span>
                       </span>
 
-                      <span className="ta-bench-col-score" dir="ltr">
+                      <span className="ta-bench-col-score">
                         <strong>
-                          {model.score}
-                          {currentMeta.unit === "%" ? "%" : ""}
+                          <bdi dir="ltr">
+                            {model.score}
+                            {currentMeta.unit === "%" ? "%" : ""}
+                          </bdi>
                         </strong>
                       </span>
                     </li>
@@ -349,34 +366,42 @@ function AiNewsContent({
               </div>
             </div>
 
-            {/* Bottom CTA */}
-            <div className="ta-vault-page-cta">
-              <div className="ta-vault-page-cta-copy">
-                <span className="ta-vault-eyebrow">
-                  <Sparkles size={13} strokeWidth={2.2} aria-hidden="true" />
-                  <span>{isEn ? "LEARN THE TOP MODELS" : "طبّق عملي بأقوى الموديلات"}</span>
-                </span>
-                <h2>
+            {/* Bottom CTA matching VaultPage */}
+            <div className="ta-vault-footer-bar ta-vault-page-cta">
+              <div className="ta-vault-footer-copy">
+                <strong>
                   {isEn
                     ? "Every time a new #1 model drops, we break it down inside Tornado Academy"
                     : "كل ما ينزل موديل جديد يتصدر الترتيب، بنشرحه ونطبّق بيه فورًا داخل المنصة"}
-                </h2>
+                </strong>
                 <p>
                   {isEn
                     ? "Explore our free Tornado Vault prompts & agent skills, or reserve your Dec 1 seat for 1,500 EGP."
                     : "جرّب خزنة تورنادو المجانية للبرومتات والمهارات، أو احجز مقعدك في دفعة 1 ديسمبر."}
                 </p>
               </div>
-              <div className="ta-bench-cta-actions">
-                <Link href={vaultHref} className="ta-vault-cta-btn">
-                  <span>{isEn ? "Open Free Vault" : "افتح خزنة تورنادو المجانية"}</span>
-                  <ForwardArrow size={16} strokeWidth={2.2} aria-hidden="true" />
-                </Link>
-              </div>
+              <Link href={vaultHref} className="ta-pill-btn">
+                <span>{isEn ? "Open Free Vault" : "افتح خزنة تورنادو المجانية"}</span>
+                <span className="ta-pill-btn-circle" aria-hidden="true">
+                  <ForwardArrow size={16} strokeWidth={2.2} />
+                </span>
+              </Link>
             </div>
           </div>
         </section>
       </main>
+
+      <footer className="site-copyright">
+        <p className="site-copyright-owner">
+          <bdi>© 2026 Tornado Academy</bdi>{" "}
+          <span>{isEn ? "All rights reserved." : "جميع الحقوق محفوظة."}</span>
+        </p>
+        <p>
+          {isEn
+            ? "Tornado AI Index — Live Top 10 Text-to-Text LLM Benchmarks."
+            : "مؤشر تورنادو — تصنيف حي ومحدّث لأقوى 10 موديلات ذكاء اصطناعي في العالم."}
+        </p>
+      </footer>
     </div>
   );
 }
