@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "./LanguageContext";
 
 const BACK_PATH =
@@ -163,6 +164,7 @@ function GlassFolder({
   className = "",
 }: GlassFolderProps) {
   const isEn = useLanguage() === "en";
+  const router = useRouter();
   const uid = useId().replace(/:/g, "");
   const rootRef = useRef<HTMLDivElement | null>(null);
   const filesRef = useRef<HTMLDivElement | null>(null);
@@ -262,7 +264,12 @@ function GlassFolder({
       data-open={isOpen || undefined}
       data-entered={entered || undefined}
       data-place={labelPlacement}
-      style={{ width, height: 326 * scale }}
+      style={{
+        width,
+        height: 326 * scale,
+        ...(href ? { cursor: "pointer" } : {}),
+      }}
+      onClick={href ? () => router.push(href) : undefined}
     >
       <style>{GF_STYLES}</style>
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
@@ -333,6 +340,7 @@ function GlassFolder({
               <Link
                 href={href}
                 className="gf-hit"
+                onClick={(e) => e.stopPropagation()}
                 aria-label={
                   isEn
                     ? `Open ${label}`
@@ -998,7 +1006,7 @@ const FOLDERS_AR: FolderConfig[] = [
       {
         name: "احجز مقعدك — افتتاح 1 ديسمبر",
         meta: "1500 ج.م شاملة كل شيء",
-        href: "#why-wait",
+        href: "/vault",
       },
     ],
   },
@@ -1061,7 +1069,7 @@ const FOLDERS_EN: FolderConfig[] = [
       {
         name: "Join Waitlist — Dec 1 Launch",
         meta: "1,500 EGP All-Access",
-        href: "#why-wait",
+        href: "/en/vault",
       },
     ],
   },
