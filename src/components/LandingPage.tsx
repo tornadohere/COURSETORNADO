@@ -1,7 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Play, Volume2, X } from "lucide-react";
+import Image from "next/image";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Clapperboard,
+  PenTool,
+  Play,
+  ShieldCheck,
+  Terminal,
+  TrendingUp,
+  Volume2,
+  X,
+} from "lucide-react";
 import { LanguageProvider, Locale } from "./LanguageContext";
 import { AmbientVideo } from "./AmbientVideo";
 import { ControlledScroll } from "./ControlledScroll";
@@ -56,47 +68,57 @@ export function LandingPage({ lang }: { lang: Locale }) {
                   <div aria-hidden="true" className="hero-studio-light" />
 
                   <div className="ta-hero-grid">
-                    {/* Main Editorial Column */}
+                    {/* Main Editorial Typography Column */}
                     <div className="ta-hero-copy">
-                      <div className="ta-hero-status-pill forge-title-word">
-                        <span className="hero-launch-dot" aria-hidden="true" />
-                        <span>
-                          {isEn
-                            ? "Opens December 1st · 1,500 EGP All-Access"
-                            : "الافتتاح 1 ديسمبر · الدخول الشامل 1500 ج.م"}
-                        </span>
-                      </div>
-
                       <h1 id="hero-title" className="ta-hero-headline">
-                        <span className="forge-title-scroll">
-                          <span className="forge-title-word">
-                            {isEn ? "The Living AI Academy." : "منصّة ومجتمع الـ AI"}
+                        <span className="forge-title-scroll ta-hero-line-mask">
+                          <span className="forge-title-word ta-hero-line-primary">
+                            {isEn ? (
+                              "The Living AI Academy."
+                            ) : (
+                              <>
+                                منصّة ومجتمع الـ{" "}
+                                <bdi dir="ltr" className="ta-hero-latin-display">
+                                  AI
+                                </bdi>
+                              </>
+                            )}
                           </span>
                         </span>
-                        <span className="forge-title-scroll">
+                        <span className="forge-title-scroll ta-hero-line-mask">
                           <span className="forge-title-word ta-hero-headline-accent">
-                            {isEn
-                              ? "Updated every day."
-                              : "اللي بيتحدّث كل يوم."}
+                            {isEn ? "Updated every day." : "اللي بيتحدّث كل يوم."}
                           </span>
                         </span>
                       </h1>
 
                       <p className="ta-hero-lead forge-title-word">
-                        {isEn
-                          ? "Master practical AI across Coding (Claude Code & Codex), Video Editing, Graphic Design, and Media Buying — with both paid pro tools and 100% free alternatives."
-                          : "تعلّم البرمجة بـ Claude Code & Codex، المونتاج، الجرافيك ديزاين، والـ Media Buying — بشرح عملي للأدوات المدفوعة والبدائل المجانية."}
+                        {isEn ? (
+                          <>
+                            Master practical AI across Coding (
+                            <bdi dir="ltr" className="ta-hero-bdi">
+                              Claude Code &amp; Codex
+                            </bdi>
+                            ), Video Editing, Graphic Design, and{" "}
+                            <bdi dir="ltr" className="ta-hero-bdi">
+                              Media Buying
+                            </bdi>{" "}
+                            — with both paid pro tools and 100% free alternatives.
+                          </>
+                        ) : (
+                          <>
+                            تعلّم البرمجة بـ{" "}
+                            <bdi dir="ltr" className="ta-hero-bdi">
+                              Claude Code &amp; Codex
+                            </bdi>
+                            ، المونتاج، الجرافيك ديزاين، والـ{" "}
+                            <bdi dir="ltr" className="ta-hero-bdi">
+                              Media Buying
+                            </bdi>{" "}
+                            — بشرح عملي للأدوات المدفوعة والبدائل المجانية.
+                          </>
+                        )}
                       </p>
-
-                      <div className="ta-hero-tracks-line forge-title-word" aria-label={isEn ? "Core tracks" : "المسارات الأساسية"}>
-                        <span>{isEn ? "Claude Code & Codex" : "البرمجة بـ AI"}</span>
-                        <i aria-hidden="true" />
-                        <span>{isEn ? "AI Video" : "المونتاج"}</span>
-                        <i aria-hidden="true" />
-                        <span>{isEn ? "Graphic Design" : "الجرافيك"}</span>
-                        <i aria-hidden="true" />
-                        <span>{isEn ? "Media Buying" : "Media Buying"}</span>
-                      </div>
 
                       <div className="ta-hero-actions hero-bottom-cta">
                         <a
@@ -127,7 +149,9 @@ export function LandingPage({ lang }: { lang: Locale }) {
                           className="ta-hero-secondary-btn"
                           onClick={() => setVideoOpen(true)}
                         >
-                          <Play size={15} strokeWidth={2.4} aria-hidden="true" />
+                          <span aria-hidden="true" className="ta-hero-secondary-play">
+                            <Play size={13} strokeWidth={2.4} fill="currentColor" />
+                          </span>
                           <span>
                             {isEn ? "Watch Intro with Sound" : "شاهد الفيديو بالصوت"}
                           </span>
@@ -135,16 +159,65 @@ export function LandingPage({ lang }: { lang: Locale }) {
                       </div>
                     </div>
 
-                    {/* Visual Column: Smoked-Glass Cinema Frame with Click-to-Play Theater */}
+                    {/* Visual Column: Sculpted Fanned Cinema Monolith */}
                     <div className="forge-art ta-hero-art-wrap">
                       <div className="forge-art-scroll">
                         <div className="forge-art-inner">
-                          <div className="ta-hero-cinema-wrap">
-                            <div aria-hidden="true" className="ta-hero-cinema-glow" />
+                          <div className="ta-cinema-stage">
+                            {/* Fanned Smoked-Glass Studio Depth Plates (echoes HeroFolders craft) */}
+                            <div
+                              aria-hidden="true"
+                              className="ta-cinema-plate ta-cinema-plate--start"
+                            >
+                              <div className="ta-cinema-plate-icon">
+                                <Image
+                                  src="/brand/tiles/code.webp"
+                                  alt=""
+                                  width={48}
+                                  height={48}
+                                  sizes="48px"
+                                  unoptimized
+                                />
+                              </div>
+                              <div className="ta-cinema-plate-meta">
+                                <bdi dir="ltr">Claude Code</bdi>
+                                <span>{isEn ? "AI Engineering" : "برمجة بالـ AI"}</span>
+                              </div>
+                            </div>
+
+                            <div
+                              aria-hidden="true"
+                              className="ta-cinema-plate ta-cinema-plate--end"
+                            >
+                              <div className="ta-cinema-plate-pair">
+                                <Image
+                                  src="/brand/tiles/video.webp"
+                                  alt=""
+                                  width={42}
+                                  height={42}
+                                  sizes="42px"
+                                  unoptimized
+                                />
+                                <Image
+                                  src="/brand/tiles/design.webp"
+                                  alt=""
+                                  width={42}
+                                  height={42}
+                                  sizes="42px"
+                                  unoptimized
+                                />
+                              </div>
+                              <div className="ta-cinema-plate-meta">
+                                <span>{isEn ? "Video · Design" : "مونتاج · جرافيك"}</span>
+                                <bdi dir="ltr">Media Buying</bdi>
+                              </div>
+                            </div>
+
+                            {/* Centerpiece Machined Cinema Monolith */}
                             <button
                               id="video"
                               type="button"
-                              className="ta-hero-video-card ta-hero-cinema-btn"
+                              className="ta-cinema-monolith"
                               onClick={() => setVideoOpen(true)}
                               aria-label={
                                 isEn
@@ -152,23 +225,100 @@ export function LandingPage({ lang }: { lang: Locale }) {
                                   : "تشغيل الفيديو التعريفي بالصوت"
                               }
                             >
-                              <div className="ta-hero-video-frame">
+                              <span className="ta-cinema-screen">
                                 <AmbientVideo
                                   className="ta-hero-video"
-                                  src="/media/academy-intro.mp4"
+                                  src="/media/academy-intro-preview.mp4"
                                   poster="/media/academy-intro-poster.webp"
                                 />
+                                <span aria-hidden="true" className="ta-cinema-grade" />
+                                <span aria-hidden="true" className="ta-cinema-sheen" />
+
+                                <span aria-hidden="true" className="ta-cinema-topbar">
+                                  <span className="ta-cinema-brand-chip">
+                                    <Image
+                                      src="/brand/tornado-icon.webp"
+                                      alt=""
+                                      width={18}
+                                      height={18}
+                                      sizes="18px"
+                                      unoptimized
+                                    />
+                                    <span>
+                                      {isEn ? "Academy Reel" : "جولة الأكاديمية"}
+                                    </span>
+                                  </span>
+                                  <span className="ta-cinema-sound-pill">
+                                    <Volume2 size={13} strokeWidth={2.2} />
+                                  </span>
+                                </span>
+
                                 <span className="ta-hero-cinema-play" aria-hidden="true">
                                   <Play size={22} strokeWidth={2.2} fill="currentColor" />
                                 </span>
-                                <span className="ta-hero-cinema-sound" aria-hidden="true">
-                                  <Volume2 size={14} strokeWidth={2.2} />
+
+                                <span aria-hidden="true" className="ta-cinema-caption">
+                                  <strong>
+                                    {isEn
+                                      ? "Inside Tornado Academy"
+                                      : "من داخل المنصّة والمجتمع"}
+                                  </strong>
+                                  <span>
+                                    {isEn
+                                      ? "Tap to watch with full audio"
+                                      : "اضغط للمشاهدة بالصوت الكامل"}
+                                  </span>
                                 </span>
-                              </div>
+                              </span>
                             </button>
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Grounded Architectural Specification Rail */}
+                  <div
+                    className="ta-hero-rail"
+                    aria-label={
+                      isEn ? "Launch details and core tracks" : "تفاصيل الافتتاح والمسارات"
+                    }
+                  >
+                    <div className="ta-hero-rail-launch">
+                      <span className="hero-launch-dot" aria-hidden="true" />
+                      <span className="ta-hero-rail-strong">
+                        {isEn ? "Opens Dec 1" : "الافتتاح 1 ديسمبر"}
+                      </span>
+                      <span className="ta-hero-rail-sep" aria-hidden="true" />
+                      <span className="ta-hero-rail-price">
+                        {isEn ? "1,500 EGP All-Access" : "الدخول الشامل 1,500 ج.م"}
+                      </span>
+                    </div>
+
+                    <div className="ta-hero-rail-tracks">
+                      <span>
+                        <Terminal size={13} strokeWidth={2.1} aria-hidden="true" />
+                        <bdi dir="ltr">Claude Code &amp; Codex</bdi>
+                      </span>
+                      <span>
+                        <Clapperboard size={13} strokeWidth={2.1} aria-hidden="true" />
+                        {isEn ? "AI Video" : "المونتاج"}
+                      </span>
+                      <span>
+                        <PenTool size={13} strokeWidth={2.1} aria-hidden="true" />
+                        {isEn ? "Graphic Design" : "الجرافيك"}
+                      </span>
+                      <span>
+                        <TrendingUp size={13} strokeWidth={2.1} aria-hidden="true" />
+                        <bdi dir="ltr">Media Buying</bdi>
+                      </span>
+                    </div>
+
+                    <div className="ta-hero-rail-guarantee">
+                      <ShieldCheck size={14} strokeWidth={2.1} aria-hidden="true" />
+                      <span>
+                        {isEn ? "3-Day Money-Back" : "ضمان استرداد 3 أيام"}
+                      </span>
                     </div>
                   </div>
                 </div>
