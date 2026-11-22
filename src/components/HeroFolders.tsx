@@ -979,7 +979,7 @@ const FOLDERS_AR: FolderConfig[] = [
     files: [
       {
         name: "أقوى 10 موديلات Text-to-Text عالميًا",
-        meta: "Artificial Analysis · حي",
+        meta: "تصنيف حي · Top 10",
         href: "/ai-news",
       },
       {
@@ -1043,7 +1043,7 @@ const FOLDERS_EN: FolderConfig[] = [
     files: [
       {
         name: "Global Top 10 Text-to-Text LLMs",
-        meta: "Artificial Analysis · Live",
+        meta: "Live Ranking · Top 10",
         href: "/en/ai-news",
       },
       {

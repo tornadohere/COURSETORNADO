@@ -10,7 +10,6 @@ import {
   BookOpen,
   Brain,
   Code2,
-  ExternalLink,
   FlaskConical,
   RefreshCw,
   Sigma,
@@ -129,8 +128,8 @@ function AiNewsContent({
                 <Activity size={13} strokeWidth={2.2} aria-hidden="true" />
                 <span>
                   {isEn
-                    ? "LIVE TEXT-TO-TEXT BENCHMARKS · ARTIFICIAL ANALYSIS"
-                    : "تحديث حي لأقوى موديلات النص · Artificial Analysis"}
+                    ? "LIVE TEXT-TO-TEXT BENCHMARKS · TORNADO INDEX"
+                    : "تحديث حي لأقوى موديلات النص · مؤشر تورنادو"}
                 </span>
               </span>
             </div>
@@ -143,8 +142,8 @@ function AiNewsContent({
               </h1>
               <p>
                 {isEn
-                  ? "Live global leaderboard of the top 10 text-to-text AI models ranked by independent benchmarks from Artificial Analysis — updated automatically so you always know which model leads in intelligence, coding, and reasoning."
-                  : "تصنيف عالمي حي ومحدّث تلقائيًا لأقوى 10 موديلات ذكاء اصطناعي (Text-to-Text) استنادًا إلى اختبارات Artificial Analysis المستقلة — عشان تكون دايمًا عارف أي موديل متصدر في الذكاء والبرمجة والمنطق."}
+                  ? "Live global leaderboard of the top 10 text-to-text AI models ranked by independent benchmarks — updated automatically so you always know which model leads in intelligence, coding, and reasoning."
+                  : "تصنيف عالمي حي ومحدّث تلقائيًا لأقوى 10 موديلات ذكاء اصطناعي (Text-to-Text) استنادًا إلى اختبارات الأداء المستقلة — عشان تكون دايمًا عارف أي موديل متصدر في الذكاء والبرمجة والمنطق."}
               </p>
             </div>
 
@@ -216,16 +215,6 @@ function AiNewsContent({
                   />
                   <span>{isEn ? "Refresh" : "تحديث"}</span>
                 </button>
-
-                <a
-                  href={currentData.source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ta-bench-source-link"
-                >
-                  <span>{currentData.source.name}</span>
-                  <ExternalLink size={13} strokeWidth={2.2} aria-hidden="true" />
-                </a>
               </div>
             </div>
 
@@ -354,17 +343,9 @@ function AiNewsContent({
                 <span>
                   <Sparkles size={13} strokeWidth={2.2} aria-hidden="true" />
                   {isEn
-                    ? `Source: ${currentData.source.name} (${currentData.sourceMetric}) · Top 10 Text-to-Text LLMs`
-                    : `المصدر: ${currentData.source.name} (${currentData.sourceMetric}) · أقوى 10 موديلات Text-to-Text`}
+                    ? "Tornado AI Index · Top 10 Text-to-Text LLMs"
+                    : "مؤشر تورنادو للذكاء الاصطناعي · أقوى 10 موديلات Text-to-Text"}
                 </span>
-                <a
-                  href={currentData.source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {isEn ? "View full methodology" : "عرض المنهجية الكاملة"}
-                  <ExternalLink size={12} strokeWidth={2.2} aria-hidden="true" />
-                </a>
               </div>
             </div>
 
