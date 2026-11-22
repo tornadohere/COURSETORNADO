@@ -9,6 +9,7 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useLanguage } from "./LanguageContext";
 
 const BACK_PATH =
@@ -46,6 +47,7 @@ interface GlassFolderProps {
   tone?: "light" | "dark";
   image?: string;
   files: FolderFileItem[];
+  href?: string;
   labelPlacement?: "bottom-left" | "top-left" | "top-right";
   defaultOpen?: boolean;
   width?: number;
@@ -153,6 +155,7 @@ function GlassFolder({
   tone = "light",
   image,
   files,
+  href,
   labelPlacement = "bottom-left",
   defaultOpen = false,
   width = 340,
@@ -326,18 +329,30 @@ function GlassFolder({
               </defs>
               <path d={FRONT_PATH} stroke={`url(#gf-rim-${uid})`} />
             </svg>
-            <button
-              ref={hitRef}
-              type="button"
-              className="gf-hit"
-              aria-expanded={isOpen}
-              aria-label={
-                isEn
-                  ? `${isOpen ? "Close" : "Open"} ${label}, ${totalCount} files`
-                  : `${isOpen ? "إغلاق " : "فتح "}${label}، ${totalCount} ملفات`
-              }
-              onClick={() => setIsOpen((prev) => !prev)}
-            />
+            {href ? (
+              <Link
+                href={href}
+                className="gf-hit"
+                aria-label={
+                  isEn
+                    ? `Open ${label}`
+                    : `فتح ${label}`
+                }
+              />
+            ) : (
+              <button
+                ref={hitRef}
+                type="button"
+                className="gf-hit"
+                aria-expanded={isOpen}
+                aria-label={
+                  isEn
+                    ? `${isOpen ? "Close" : "Open"} ${label}, ${totalCount} files`
+                    : `${isOpen ? "إغلاق " : "فتح "}${label}، ${totalCount} ملفات`
+                }
+                onClick={() => setIsOpen((prev) => !prev)}
+              />
+            )}
             <span className="gf-mark" aria-hidden="true">
               <Image
                 src="/brand/tornado-icon.webp"
@@ -891,6 +906,7 @@ function TechnologyFolder({ title }: { title: string }) {
 interface FolderConfig {
   label: string;
   meta: string;
+  href?: string;
   files: FolderFileItem[];
 }
 
@@ -913,6 +929,7 @@ function FolderSlot({ folder, index }: { folder: FolderConfig; index: number }) 
       <GlassFolder
         label={folder.label}
         meta={folder.meta}
+        href={folder.href}
         files={folder.files}
         image={`/brand/folders/glacier-${3 + index}.webp`}
         tone="light"
@@ -971,6 +988,7 @@ const FOLDERS_AR: FolderConfig[] = [
   {
     label: "خزنة تورنادو المجانية",
     meta: "Prompts و Skills جاهزة مجانًا.",
+    href: "/vault",
     files: [
       {
         name: "خزنة البرومتات والمهارات (Skills)",
@@ -1033,6 +1051,7 @@ const FOLDERS_EN: FolderConfig[] = [
   {
     label: "Free Tornado Vault",
     meta: "Free Prompts & Agent Skills.",
+    href: "/en/vault",
     files: [
       {
         name: "Open Full Prompts & Skills Vault",
