@@ -973,23 +973,24 @@ const FOLDERS_AR: FolderConfig[] = [
     ],
   },
   {
-    label: "مكتبة تتحدث يوميًا",
-    meta: "كل يومين موديل جديد؟ بيتشرح فورًا.",
+    label: "أخبار الـ AI",
+    meta: "ترتيب أقوى 10 موديلات في العالم يوميًا.",
+    href: "/ai-news",
     files: [
       {
+        name: "أقوى 10 موديلات Text-to-Text عالميًا",
+        meta: "Artificial Analysis · حي",
+        href: "/ai-news",
+      },
+      {
+        name: "مقارنة الذكاء، البرمجة، والرياضيات",
+        meta: "تحديث تلقائي للـ Benchmarks",
+        href: "/ai-news",
+      },
+      {
         name: "رادار موديلات الـ AI اليومي",
-        meta: "تحديث فوري للمكتبة",
-        href: "#video",
-      },
-      {
-        name: "الأدوات المدفوعة والبدائل المجانية",
-        meta: "تطبّق بدون تكاليف إضافية",
-        href: "#free-vs-paid",
-      },
-      {
-        name: "مجتمع Tornado داخل المنصة",
-        meta: "دعم، تطبيق عملي، ونقاشات",
-        href: "#pricing",
+        meta: "افتح صفحة التصنيف الآن",
+        href: "/ai-news",
       },
     ],
   },
@@ -1036,23 +1037,24 @@ const FOLDERS_EN: FolderConfig[] = [
     ],
   },
   {
-    label: "Daily AI Updates",
-    meta: "New model every 48h? Covered fast.",
+    label: "AI News & Benchmarks",
+    meta: "Live Top 10 Text-to-Text AI Models.",
+    href: "/en/ai-news",
     files: [
       {
+        name: "Global Top 10 Text-to-Text LLMs",
+        meta: "Artificial Analysis · Live",
+        href: "/en/ai-news",
+      },
+      {
+        name: "Intelligence, Coding & Math Indices",
+        meta: "Auto-synced benchmarks",
+        href: "/en/ai-news",
+      },
+      {
         name: "Live AI Model Radar",
-        meta: "Continuous library updates",
-        href: "#video",
-      },
-      {
-        name: "Paid Tools & Free Alternatives",
-        meta: "Zero extra tool budget needed",
-        href: "#free-vs-paid",
-      },
-      {
-        name: "In-Platform Tornado Community",
-        meta: "Support, feedback & daily workflows",
-        href: "#pricing",
+        meta: "Open full leaderboard",
+        href: "/en/ai-news",
       },
     ],
   },

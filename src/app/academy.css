@@ -3240,3 +3240,405 @@ html[lang="en"] .ta-signature-copy h2 {
       inset 0 1px 0 rgba(255, 255, 255, 0.28);
   }
 }
+
+/* ==========================================================================
+   AI News & Top 10 LLM Benchmarks (/ai-news & /en/ai-news)
+   ========================================================================== */
+
+.ta-bench-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.ta-bench-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ta-bench-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #b6c6bc;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.ta-bench-tab:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.ta-bench-tab[data-active="true"] {
+  background: #e5e4e2;
+  border-color: #e5e4e2;
+  color: #050608;
+}
+
+.ta-bench-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ta-bench-refresh-btn,
+.ta-bench-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+  color: #d6dcd7;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.ta-bench-refresh-btn:hover,
+.ta-bench-source-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+}
+
+.ta-bench-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@keyframes ta-bench-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ta-bench-spin {
+  animation: ta-bench-rotate 0.8s linear infinite;
+}
+
+.ta-bench-metric-desc {
+  margin: 0 0 28px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #9ba59d;
+}
+
+.ta-bench-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+  transition: opacity 0.2s ease;
+}
+
+.ta-bench-podium[data-loading],
+.ta-bench-board[data-loading] {
+  opacity: 0.6;
+}
+
+.ta-bench-podium-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 22px 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(90% 80% at 100% 0%, rgba(182, 198, 188, 0.08) 0%, transparent 65%),
+    rgba(255, 255, 255, 0.028);
+}
+
+.ta-bench-podium-card[data-rank="1"] {
+  border-color: rgba(182, 198, 188, 0.34);
+  background:
+    radial-gradient(100% 90% at 100% 0%, rgba(182, 198, 188, 0.16) 0%, transparent 70%),
+    rgba(255, 255, 255, 0.045);
+}
+
+.ta-bench-podium-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ta-bench-rank-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-family: var(--font-bricolage), Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e4e2;
+}
+
+.ta-bench-rank-pill[data-rank="1"] {
+  background: #e5e4e2;
+  color: #050608;
+}
+
+.ta-bench-creator-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cfd7d1;
+}
+
+.ta-bench-creator--google {
+  border-color: rgba(96, 165, 250, 0.32);
+  background: rgba(59, 130, 246, 0.12);
+  color: #bfdbfe;
+}
+
+.ta-bench-creator--anthropic {
+  border-color: rgba(217, 155, 110, 0.36);
+  background: rgba(217, 155, 110, 0.14);
+  color: #f4d2b8;
+}
+
+.ta-bench-creator--openai {
+  border-color: rgba(110, 231, 183, 0.32);
+  background: rgba(16, 185, 129, 0.12);
+  color: #a7f3d0;
+}
+
+.ta-bench-creator--xai,
+.ta-bench-creator--deepseek,
+.ta-bench-creator--meta {
+  border-color: rgba(196, 181, 253, 0.32);
+  background: rgba(139, 92, 246, 0.12);
+  color: #ddd6fe;
+}
+
+.ta-bench-podium-name {
+  margin: 0;
+  font-family: var(--font-bricolage), Arial, sans-serif;
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #ffffff;
+}
+
+.ta-bench-podium-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ta-bench-podium-score-row strong {
+  font-family: var(--font-bricolage), Arial, sans-serif;
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #b6c6bc;
+}
+
+.ta-bench-podium-score-row span {
+  font-size: 12.5px;
+  color: #8f9a92;
+}
+
+.ta-bench-bar-track {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.ta-bench-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8ca89a 0%, #e5e4e2 100%);
+  transition: width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ta-bench-board {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.022);
+  overflow: hidden;
+  margin-bottom: clamp(44px, 6vw, 72px);
+  transition: opacity 0.2s ease;
+}
+
+.ta-bench-board-head,
+.ta-bench-row {
+  display: grid;
+  grid-template-columns: 56px minmax(180px, 1.5fr) 130px minmax(120px, 1fr) 92px;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 22px;
+}
+
+.ta-bench-board-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #8f9a92;
+}
+
+.ta-bench-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ta-bench-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.16s ease;
+}
+
+.ta-bench-row:last-child {
+  border-bottom: 0;
+}
+
+.ta-bench-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ta-bench-row[data-top] {
+  background: rgba(182, 198, 188, 0.035);
+}
+
+.ta-bench-row-rank {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  font-family: var(--font-bricolage), Arial, sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.055);
+  color: #c7d1ca;
+}
+
+.ta-bench-row-rank[data-rank="1"] {
+  background: #e5e4e2;
+  color: #050608;
+}
+
+.ta-bench-row-rank[data-rank="2"],
+.ta-bench-row-rank[data-rank="3"] {
+  background: rgba(182, 198, 188, 0.18);
+  color: #ffffff;
+}
+
+.ta-bench-col-model strong {
+  font-family: var(--font-bricolage), Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f3f4f3;
+}
+
+.ta-bench-col-score {
+  text-align: end;
+}
+
+.ta-bench-col-score strong {
+  font-family: var(--font-bricolage), Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #b6c6bc;
+}
+
+.ta-bench-board-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 12.5px;
+  color: #8f9a92;
+}
+
+.ta-bench-board-foot span,
+.ta-bench-board-foot a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ta-bench-board-foot a {
+  color: #d6dcd7;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.ta-bench-board-foot a:hover {
+  color: #ffffff;
+}
+
+.ta-bench-cta-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 960px) {
+  .ta-bench-podium {
+    grid-template-columns: 1fr;
+  }
+
+  .ta-bench-board-head,
+  .ta-bench-row {
+    grid-template-columns: 44px minmax(0, 1fr) 104px 72px;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .ta-bench-col-bar {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .ta-bench-board-head,
+  .ta-bench-row {
+    grid-template-columns: 38px minmax(0, 1fr) 68px;
+    gap: 10px;
+    padding: 13px 14px;
+  }
+
+  .ta-bench-col-creator {
+    display: none;
+  }
+}

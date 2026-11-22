@@ -44,7 +44,8 @@ export function SiteHeader({ editorial = false }: { editorial?: boolean }) {
   const isSubpage =
     pathname.includes("/projects/") ||
     pathname.includes("/courses/") ||
-    pathname.includes("/vault");
+    pathname.includes("/vault") ||
+    pathname.includes("/ai-news");
   const isVaultPage = pathname.includes("/vault");
   const prefix = isSubpage ? (isEn ? "/en" : "/") : "";
   const switchHref = isEn
