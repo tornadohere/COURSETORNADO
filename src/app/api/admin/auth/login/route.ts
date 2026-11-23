@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import {
   getClientIp,
@@ -88,7 +90,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const accessToken = authData.session?.access_token;
+    const { url, anonKey } = getSupabaseConfig();
+    const profileClient = accessToken
+      ? createClient(url, anonKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          global: {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        })
+      : supabase;
+
+    const { data: profile, error: profileError } = await profileClient
       .from("profiles")
       .select("id, email, full_name, role, created_at")
       .eq("id", authData.user.id)
@@ -96,11 +111,15 @@ export async function POST(req: Request) {
 
     if (profileError || !profile || profile.role !== "admin") {
       await supabase.auth.signOut();
+      const reason = profileError
+        ? `خطأ في قراءة الصلاحية: ${profileError.message}`
+        : !profile
+        ? "لم يتم العثور على سجل لهذا الحساب في جدول public.profiles."
+        : `هذا الحساب لا يملك صلاحية الأدمن (الحالي: ${profile.role}).`;
       return NextResponse.json(
         {
           ok: false,
-          error:
-            "هذا الحساب لا يملك صلاحية الأدمن (role = admin) في قاعدة البيانات.",
+          error: reason,
         },
         { status: 403 }
       );
