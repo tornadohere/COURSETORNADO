@@ -8,24 +8,46 @@ export function WhyWait() {
   const isEn = useLanguage() === "en";
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
     if (!name.trim() || !phone.trim()) return;
     setSubmitting(true);
+    setErrorMsg(null);
     try {
-      await fetch("/api/waitlist", {
+      const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          website,
+        }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErrorMsg(
+          typeof data?.error === "string"
+            ? data.error
+            : isEn
+            ? "Please check your details and try again."
+            : "تأكد من صحة البيانات وحاول مرة أخرى."
+        );
+        return;
+      }
+      setSubmitted(true);
     } catch {
-      // ignore network error and show confirmation
+      setErrorMsg(
+        isEn
+          ? "Network error. Please try again."
+          : "حدث خطأ في الاتصال. حاول مرة أخرى."
+      );
     } finally {
       setSubmitting(false);
-      setSubmitted(true);
     }
   };
 
@@ -120,6 +142,28 @@ export function WhyWait() {
           </div>
         ) : (
           <form className="contact-form" onSubmit={handleSubmit}>
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                insetInlineStart: "-9999px",
+                width: 1,
+                height: 1,
+                overflow: "hidden",
+              }}
+            >
+              <label>
+                Website
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(ev) => setWebsite(ev.target.value)}
+                />
+              </label>
+            </div>
             <label>
               {isEn ? "Your name" : "اسمك بالكامل"}
               <input
@@ -146,6 +190,19 @@ export function WhyWait() {
                 dir="ltr"
               />
             </label>
+            {errorMsg && (
+              <p
+                role="alert"
+                style={{
+                  color: "#b91c1c",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                {errorMsg}
+              </p>
+            )}
             <button type="submit" disabled={submitting}>
               <span>
                 {submitting
