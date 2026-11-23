@@ -61,6 +61,27 @@ export async function POST(req: Request) {
       });
 
     if (authError || !authData.user) {
+      const msg = (authError?.message || "").toLowerCase();
+      if (msg.includes("invalid api key")) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "مفتاح Supabase (NEXT_PUBLIC_SUPABASE_ANON_KEY) غير صحيح. تأكد من نسخ الـ anon public key أو publishable key الصحيح.",
+          },
+          { status: 500 }
+        );
+      }
+      if (msg.includes("email not confirmed")) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "الحساب غير مفعّل بعد. فعّل Auto Confirm User في Supabase ثم حاول مرة أخرى.",
+          },
+          { status: 401 }
+        );
+      }
       return NextResponse.json(
         { ok: false, error: "البريد الإلكتروني أو كلمة المرور غير صحيحة." },
         { status: 401 }
