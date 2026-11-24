@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Play, Volume2, VolumeX } from "lucide-react";
+import React, { useRef } from "react";
+import { ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { LanguageProvider, Locale } from "./LanguageContext";
 import { ControlledScroll } from "./ControlledScroll";
 import { SiteHeader } from "./SiteHeader";
@@ -13,51 +13,14 @@ import { ToolsReassuranceSection } from "./ToolsReassuranceSection";
 import { TornadoVaultSection } from "./TornadoVaultSection";
 import { PricingAndFaqSection } from "./PricingAndFaqSection";
 import { WhyWait } from "./WhyWait";
+import { VideoPlayer, VideoPlayerHandle } from "./VideoPlayer";
 
 export function LandingPage({ lang }: { lang: Locale }) {
   const isEn = lang === "en";
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isMuted, setIsMuted] = useState(true);
-
-  useEffect(() => {
-    const vid = videoRef.current;
-    if (!vid) return;
-
-    // Try unmuted autoplay first; if browser policy blocks it, fall back to muted autoplay
-    vid.muted = false;
-    vid.play()
-      .then(() => {
-        setIsMuted(false);
-      })
-      .catch(() => {
-        vid.muted = true;
-        setIsMuted(true);
-        vid.play().catch(() => {});
-      });
-  }, []);
-
-  const toggleSound = () => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    const nextMuted = !vid.muted;
-    vid.muted = nextMuted;
-    setIsMuted(nextMuted);
-    if (!nextMuted && vid.paused) {
-      vid.play().catch(() => {});
-    }
-  };
+  const playerRef = useRef<VideoPlayerHandle | null>(null);
 
   const watchWithSound = () => {
-    const vid = videoRef.current;
-    if (vid) {
-      vid.muted = false;
-      setIsMuted(false);
-      if (vid.currentTime < 2) {
-        vid.currentTime = 0;
-      }
-      vid.play().catch(() => {});
-      vid.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    playerRef.current?.playWithSound();
   };
 
   return (
@@ -173,42 +136,14 @@ export function LandingPage({ lang }: { lang: Locale }) {
                             <div aria-hidden="true" className="ta-hero-cinema-glow" />
                             <div id="video" className="ta-hero-video-card ta-hero-inline-card">
                               <div className="ta-hero-video-frame">
-                                <video
-                                  ref={videoRef}
-                                  className="ta-hero-video"
+                                <VideoPlayer
+                                  ref={playerRef}
                                   src="/media/academy-intro.mp4"
                                   poster="/media/academy-intro-poster.webp"
-                                  controls
+                                  isEn={isEn}
                                   autoPlay
                                   loop
-                                  playsInline
-                                  preload="metadata"
-                                  onVolumeChange={() => {
-                                    if (videoRef.current) {
-                                      setIsMuted(videoRef.current.muted);
-                                    }
-                                  }}
                                 />
-                                <button
-                                  type="button"
-                                  className="ta-hero-inline-sound"
-                                  onClick={toggleSound}
-                                  aria-label={
-                                    isMuted
-                                      ? isEn
-                                        ? "Unmute video"
-                                        : "تشغيل الصوت"
-                                      : isEn
-                                      ? "Mute video"
-                                      : "كتم الصوت"
-                                  }
-                                >
-                                  {isMuted ? (
-                                    <VolumeX size={15} strokeWidth={2.2} />
-                                  ) : (
-                                    <Volume2 size={15} strokeWidth={2.2} />
-                                  )}
-                                </button>
                               </div>
                             </div>
                           </div>
