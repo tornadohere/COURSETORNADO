@@ -2067,27 +2067,55 @@ html[dir="ltr"] .hero-technology-folder h3 {
     min-height: 48px;
   }
 
-  /* Keep TechnologyFolder clean on mobile without tag/pill collision */
+  /* Compact TechnologyFolder for 2x2 mobile grid */
   .hero-technology-slot {
-    width: 100%;
-    max-width: 360px;
-    margin-inline: auto;
+    grid-column: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    align-self: end;
   }
 
   .hero-technology-folder {
-    height: 276px !important;
-    max-width: 360px !important;
-    margin-inline: auto;
+    height: 152px !important;
+    max-width: none !important;
+    width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  .hero-technology-folder > [data-icon-folder-back] {
+    top: 8px !important;
+  }
+
+  .hero-technology-folder > [data-icon-folder-front] {
+    height: 104px !important;
+  }
+
+  .hero-technology-folder [data-icon-folder-tile] {
+    top: 20px !important;
+    border-radius: 14px !important;
   }
 
   .hero-technology-folder h3 {
-    font-size: 18px !important;
-    padding-top: 28px !important;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+    padding: 24px 12px 0 !important;
   }
 
   .hero-technology-folder [data-icon-folder-tags] {
-    gap: 5px !important;
-    margin-top: 10px !important;
+    gap: 4px !important;
+    margin: 6px 10px 0 !important;
+  }
+
+  .hero-technology-folder [data-icon-folder-tag] {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    min-height: 16px !important;
+    padding: 1px 6px !important;
+  }
+
+  .hero-technology-folder [data-icon-folder-tag]:nth-child(n+5) {
+    display: none !important;
   }
 
   /* Hide redundant tiny mini-dock on mobile so tags never collide with it */
@@ -2365,47 +2393,47 @@ html[dir="ltr"] .hero-technology-folder h3 {
 }
 
 /* ============================================================================
-   MOBILE FOLDER STACK — preserve true 340x272 SVG folder proportions & clean fan
+   MOBILE FOLDER GRID — compact 2x2 grid (~1/3 viewport height, ~1/2 width each)
    ============================================================================ */
 @media (max-width: 767px) {
   .opening-flow .hero-folder-row {
-    grid-template-columns: 1fr !important;
-    row-gap: 28px !important;
-    padding: 20px 16px 16px !important;
-    justify-items: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px 12px !important;
+    padding: 16px 14px 12px !important;
+    align-items: end !important;
+    justify-items: stretch;
   }
 
   .hero-folder-row .hero-folder-slot {
     width: 100%;
-    max-width: 340px;
-    margin-inline: auto;
+    max-width: none;
+    margin-inline: 0;
     display: flex;
     justify-content: center;
   }
 
-  /* Keep the top sheet header cleanly above the front pocket's left edge (y=74px)
-     so slanted clip-path curves never slice through Arabic/English sheet titles. */
+  /* Keep closed folders clean and compact in the 2x2 grid */
   .opening-flow .hero-folder-row .hero-glass-folder,
   .opening-flow .hero-folder-row .hero-glass-folder:hover,
   .opening-flow .hero-folder-row .hero-glass-folder:focus-within {
     --gf-hinge: 0deg;
-    --gf-lift: -44px;
+    --gf-lift: -26px;
     --gf-stack: 6px;
     --gf-spread: 2px;
-    --gf-fan: 0.6deg;
+    --gf-fan: 0.5deg;
   }
 
   .opening-flow .hero-folder-row .hero-glass-folder[data-open] {
     --gf-hinge: -16deg;
-    --gf-lift: -80px;
-    --gf-stack: 22px;
-    --gf-spread: 12px;
-    --gf-fan: 2deg;
+    --gf-lift: -68px;
+    --gf-stack: 18px;
+    --gf-spread: 10px;
+    --gf-fan: 1.8deg;
     z-index: 20;
   }
 
   .hero-folder-row .gf-files {
-    clip-path: inset(-150px -20px 10px -20px);
+    clip-path: inset(-140px -16px 10px -16px);
   }
 
   .hero-folder-row .gf-sheet-head {
@@ -2415,13 +2443,19 @@ html[dir="ltr"] .hero-technology-folder h3 {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity .25s ease;
+  }
+
+  .hero-folder-row .hero-glass-folder[data-open] .gf-sheet-head {
+    opacity: 1;
   }
 
   .hero-folder-row .gf-sheet-name {
-    font-size: 11.5px;
+    font-size: 16px;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.25;
     min-width: 0;
     flex: 1 1 auto;
   }
@@ -2430,13 +2464,7 @@ html[dir="ltr"] .hero-technology-folder h3 {
     display: none;
   }
 
-  .hero-folder-row .hero-glass-folder[data-open] .gf-sheet-meta {
-    display: inline-block;
-    font-size: 9.5px;
-    opacity: 0.7;
-  }
-
-  /* Preserve frosted glass depth on mobile instead of flat opaque tint */
+  /* Preserve frosted glass depth on mobile */
   .hero-folder-row .gf-front {
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
     backdrop-filter: blur(18px) saturate(1.4);
@@ -2446,36 +2474,37 @@ html[dir="ltr"] .hero-technology-folder h3 {
     background: linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.24) 0%,
-      rgba(248, 251, 253, 0.64) 44%,
-      rgba(252, 252, 253, 0.95) 100%
+      rgba(248, 251, 253, 0.68) 44%,
+      rgba(252, 252, 253, 0.96) 100%
     );
   }
 
   .hero-folder-row .gf-mark {
-    top: calc(16% + 12px);
+    top: calc(17% + 10px);
     inset-inline-end: 16px;
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
   }
 
+  /* Scale up inside the 340px stage so 0.5x mobile scale stays crisp & readable */
   .hero-folder-row .gf-label {
-    left: 22px;
-    right: 22px;
-    bottom: 22px;
-    max-width: calc(100% - 44px);
-    gap: 5px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    max-width: calc(100% - 40px);
+    gap: 6px;
   }
 
   .hero-folder-row .gf-title {
-    font-size: 19px;
+    font-size: 27px;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.25;
   }
 
   .hero-folder-row .gf-meta {
-    font-size: 12px;
-    line-height: 1.45;
+    font-size: 18px;
+    line-height: 1.35;
     white-space: normal;
   }
 }

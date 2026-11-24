@@ -926,7 +926,7 @@ function FolderSlot({ folder, index }: { folder: FolderConfig; index: number }) 
     const el = slotRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
-      setSlotWidth(Math.max(180, Math.floor(entry.contentRect.width)));
+      setSlotWidth(Math.max(120, Math.floor(entry.contentRect.width)));
     });
     ro.observe(el);
     return () => ro.disconnect();
