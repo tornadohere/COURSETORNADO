@@ -48,6 +48,16 @@ export interface WaitlistStats {
 
 export type LessonVideoType = "hls" | "mp4";
 
+export interface CourseModuleRecord {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CourseRecord {
   id: string;
   slug: string;
@@ -58,12 +68,14 @@ export interface CourseRecord {
   is_published: boolean;
   created_at: string;
   updated_at: string;
+  modules?: CourseModuleRecord[];
   lessons?: LessonRecord[];
 }
 
 export interface LessonRecord {
   id: string;
   course_id: string;
+  module_id?: string | null;
   module_title: string;
   title: string;
   description: string;

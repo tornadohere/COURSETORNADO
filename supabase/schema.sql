@@ -259,9 +259,52 @@ create policy "Active members can read published courses"
   to authenticated
   using (is_published = true and public.is_active_member());
 
+create table if not exists public.course_modules (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  title text not null check (char_length(trim(title)) between 2 and 160),
+  description text not null default '',
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists course_modules_course_idx
+  on public.course_modules (course_id, sort_order asc, created_at asc);
+
+drop trigger if exists course_modules_set_updated_at on public.course_modules;
+create trigger course_modules_set_updated_at
+  before update on public.course_modules
+  for each row execute function public.set_updated_at();
+
+alter table public.course_modules enable row level security;
+
+drop policy if exists "Admins can manage course modules" on public.course_modules;
+create policy "Admins can manage course modules"
+  on public.course_modules
+  for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Active members can read published course modules" on public.course_modules;
+create policy "Active members can read published course modules"
+  on public.course_modules
+  for select
+  to authenticated
+  using (
+    public.is_active_member()
+    and exists (
+      select 1 from public.courses c
+      where c.id = course_modules.course_id
+        and c.is_published = true
+    )
+  );
+
 create table if not exists public.course_lessons (
   id uuid primary key default gen_random_uuid(),
   course_id uuid not null references public.courses(id) on delete cascade,
+  module_id uuid references public.course_modules(id) on delete set null,
   module_title text not null default 'المقدمة',
   title text not null check (char_length(trim(title)) between 2 and 180),
   description text not null default '',
@@ -274,6 +317,12 @@ create table if not exists public.course_lessons (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.course_lessons
+  add column if not exists module_id uuid references public.course_modules(id) on delete set null;
+
+create index if not exists course_lessons_module_idx
+  on public.course_lessons (module_id, sort_order asc);
 
 create index if not exists course_lessons_course_idx
   on public.course_lessons (course_id, sort_order asc, created_at asc);

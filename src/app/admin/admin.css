@@ -1223,3 +1223,49 @@
   border-color: rgba(239, 68, 68, 0.45);
   color: #fca5a5;
 }
+
+.admin-modules-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-module-card {
+  padding: 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-module-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.admin-module-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.admin-module-card-desc {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: rgba(229, 228, 226, 0.56);
+}
+
+.admin-module-empty {
+  padding: 14px;
+  border-radius: 11px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  font-size: 12.5px;
+  color: rgba(229, 228, 226, 0.55);
+  text-align: center;
+}

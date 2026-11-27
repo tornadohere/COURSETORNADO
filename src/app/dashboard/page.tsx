@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   ChatChannelRecord,
   ChatMessageRecord,
+  CourseModuleRecord,
   CourseRecord,
   ExclusiveVaultItem,
   LessonRecord,
@@ -44,7 +45,7 @@ export default async function StudentDashboardPage() {
   let vaultItems: ExclusiveVaultItem[] = [];
 
   if (supabase) {
-    const [coursesRes, lessonsRes, progressRes, channelsRes, vaultRes] =
+    const [coursesRes, modulesRes, lessonsRes, progressRes, channelsRes, vaultRes] =
       await Promise.all([
         supabase
           .from("courses")
@@ -55,9 +56,14 @@ export default async function StudentDashboardPage() {
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: false }),
         supabase
+          .from("course_modules")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true }),
+        supabase
           .from("course_lessons")
           .select(
-            "id, course_id, module_title, title, description, sort_order, duration_seconds, video_type, is_published, created_at, updated_at"
+            "id, course_id, module_id, module_title, title, description, sort_order, duration_seconds, video_type, is_published, created_at, updated_at"
           )
           .eq("is_published", true)
           .order("sort_order", { ascending: true })
@@ -81,6 +87,15 @@ export default async function StudentDashboardPage() {
       ]);
 
     if (Array.isArray(coursesRes.data)) {
+      const modulesByCourse = new Map<string, CourseModuleRecord[]>();
+      if (Array.isArray(modulesRes.data)) {
+        for (const mod of modulesRes.data as CourseModuleRecord[]) {
+          const list = modulesByCourse.get(mod.course_id) || [];
+          list.push(mod);
+          modulesByCourse.set(mod.course_id, list);
+        }
+      }
+
       const lessonsByCourse = new Map<string, LessonRecord[]>();
       if (Array.isArray(lessonsRes.data)) {
         for (const row of lessonsRes.data) {
@@ -92,6 +107,7 @@ export default async function StudentDashboardPage() {
       }
       courses = coursesRes.data.map((c) => ({
         ...(c as CourseRecord),
+        modules: modulesByCourse.get(c.id) || [],
         lessons: lessonsByCourse.get(c.id) || [],
       }));
     }

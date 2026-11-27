@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Loader2,
   Layers,
+  ChevronDown,
 } from "lucide-react";
 import type { CourseRecord, LessonRecord } from "@/lib/supabase/types";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -42,6 +43,9 @@ export function StudentCoursesView({
   } | null>(null);
   const [loadingVideo, setLoadingVideo] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [collapsedModules, setCollapsedModules] = useState<Set<string>>(
+    () => new Set()
+  );
 
   const activeCourse = useMemo(
     () => courses.find((c) => c.id === selectedCourseId) || courses[0] || null,
@@ -56,17 +60,45 @@ export function StudentCoursesView({
     );
   }, [activeCourse, activeLessonId]);
 
-  // Group lessons by module_title
+  // Group lessons by explicit modules (in sort_order) + fallback by module_title
   const modules = useMemo(() => {
-    if (!activeCourse?.lessons) return [];
-    const map = new Map<string, LessonRecord[]>();
-    for (const lesson of activeCourse.lessons) {
-      const mod = lesson.module_title || "عام";
-      const list = map.get(mod) || [];
-      list.push(lesson);
-      map.set(mod, list);
+    if (!activeCourse) return [];
+    const explicitMods = [...(activeCourse.modules || [])].sort(
+      (a, b) => a.sort_order - b.sort_order
+    );
+    const lessons = activeCourse.lessons || [];
+    const usedIds = new Set<string>();
+    const result: { key: string; title: string; lessons: LessonRecord[] }[] =
+      [];
+
+    for (const mod of explicitMods) {
+      const modLessons = lessons.filter((l) => {
+        const match =
+          l.module_id === mod.id ||
+          (!l.module_id && l.module_title === mod.title);
+        if (match) usedIds.add(l.id);
+        return match;
+      });
+      if (modLessons.length > 0) {
+        result.push({ key: mod.id, title: mod.title, lessons: modLessons });
+      }
     }
-    return Array.from(map.entries());
+
+    const remaining = lessons.filter((l) => !usedIds.has(l.id));
+    if (remaining.length > 0) {
+      const map = new Map<string, LessonRecord[]>();
+      for (const lesson of remaining) {
+        const mod = lesson.module_title || "عام";
+        const list = map.get(mod) || [];
+        list.push(lesson);
+        map.set(mod, list);
+      }
+      for (const [title, list] of map.entries()) {
+        result.push({ key: `legacy-${title}`, title, lessons: list });
+      }
+    }
+
+    return result;
   }, [activeCourse]);
 
   // Load protected playback URL whenever activeLesson changes
@@ -290,38 +322,76 @@ export function StudentCoursesView({
           </div>
 
           <div className="sd-modules-list">
-            {modules.map(([modName, modLessons]) => (
-              <div key={modName} className="sd-module-group">
-                <div className="sd-module-title">{modName}</div>
-                <div className="sd-module-lessons">
-                  {modLessons.map((lesson) => {
-                    const isActive = lesson.id === activeLesson?.id;
-                    const isDone = completedSet.has(lesson.id);
-                    return (
-                      <button
-                        key={lesson.id}
-                        type="button"
-                        className={`sd-lesson-item${isActive ? " is-active" : ""}`}
-                        onClick={() => setActiveLessonId(lesson.id)}
-                      >
-                        <span
-                          className={`sd-lesson-check${isDone ? " is-done" : ""}`}
-                        >
-                          {isDone ? (
-                            <CheckCircle2 size={15} />
-                          ) : (
-                            <PlayCircle size={15} />
-                          )}
-                        </span>
-                        <span className="sd-lesson-item-title">
-                          {lesson.title}
-                        </span>
-                      </button>
-                    );
-                  })}
+            {modules.map((mod) => {
+              const isCollapsed = collapsedModules.has(mod.key);
+              const modCompleted = mod.lessons.filter((l) =>
+                completedSet.has(l.id)
+              ).length;
+              return (
+                <div key={mod.key} className="sd-module-group">
+                  <button
+                    type="button"
+                    className="sd-module-head-btn"
+                    onClick={() =>
+                      setCollapsedModules((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(mod.key)) next.delete(mod.key);
+                        else next.add(mod.key);
+                        return next;
+                      })
+                    }
+                  >
+                    <span className="sd-module-title" style={{ marginBottom: 0 }}>
+                      {mod.title}
+                    </span>
+                    <span className="sd-module-head-meta">
+                      <span>
+                        {modCompleted}/{mod.lessons.length}
+                      </span>
+                      <ChevronDown
+                        size={14}
+                        style={{
+                          transform: isCollapsed
+                            ? "rotate(90deg)"
+                            : "rotate(0deg)",
+                          transition: "transform 0.18s ease",
+                        }}
+                      />
+                    </span>
+                  </button>
+
+                  {!isCollapsed && (
+                    <div className="sd-module-lessons">
+                      {mod.lessons.map((lesson) => {
+                        const isActive = lesson.id === activeLesson?.id;
+                        const isDone = completedSet.has(lesson.id);
+                        return (
+                          <button
+                            key={lesson.id}
+                            type="button"
+                            className={`sd-lesson-item${isActive ? " is-active" : ""}`}
+                            onClick={() => setActiveLessonId(lesson.id)}
+                          >
+                            <span
+                              className={`sd-lesson-check${isDone ? " is-done" : ""}`}
+                            >
+                              {isDone ? (
+                                <CheckCircle2 size={15} />
+                              ) : (
+                                <PlayCircle size={15} />
+                              )}
+                            </span>
+                            <span className="sd-lesson-item-title">
+                              {lesson.title}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </aside>
       </div>

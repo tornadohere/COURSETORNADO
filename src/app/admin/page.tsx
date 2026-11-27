@@ -5,6 +5,7 @@ import { isServiceRoleConfigured } from "@/lib/supabase/service";
 import { getR2Config } from "@/lib/r2/client";
 import type {
   ChatChannelRecord,
+  CourseModuleRecord,
   CourseRecord,
   ExclusiveVaultItem,
   LessonRecord,
@@ -78,58 +79,80 @@ export default async function AdminPage() {
   let channels: ChatChannelRecord[] = [];
 
   if (supabase) {
-    const [waitlistRes, coursesRes, lessonsRes, studentsRes, vaultRes, channelsRes] =
-      await Promise.all([
-        supabase
-          .from("waitlist_entries")
-          .select(
-            "id, name, phone, status, notes, source, launch_date, created_at, updated_at"
-          )
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("courses")
-          .select(
-            "id, slug, title, description, thumbnail_url, sort_order, is_published, created_at, updated_at"
-          )
-          .order("sort_order", { ascending: true })
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("course_lessons")
-          .select(
-            "id, course_id, module_title, title, description, sort_order, duration_seconds, video_type, r2_key, hls_key_hex, is_published, created_at, updated_at"
-          )
-          .order("sort_order", { ascending: true })
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("profiles")
-          .select(
-            "id, email, full_name, role, bio, specialty, is_active, is_muted, created_at, updated_at"
-          )
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("exclusive_vault_items")
-          .select("*")
-          .order("is_featured", { ascending: false })
-          .order("sort_order", { ascending: true })
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("chat_channels")
-          .select("*")
-          .order("sort_order", { ascending: true })
-          .order("created_at", { ascending: true }),
-      ]);
+    const [
+      waitlistRes,
+      coursesRes,
+      modulesRes,
+      lessonsRes,
+      studentsRes,
+      vaultRes,
+      channelsRes,
+    ] = await Promise.all([
+      supabase
+        .from("waitlist_entries")
+        .select(
+          "id, name, phone, status, notes, source, launch_date, created_at, updated_at"
+        )
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("courses")
+        .select(
+          "id, slug, title, description, thumbnail_url, sort_order, is_published, created_at, updated_at"
+        )
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("course_modules")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("course_lessons")
+        .select(
+          "id, course_id, module_id, module_title, title, description, sort_order, duration_seconds, video_type, r2_key, hls_key_hex, is_published, created_at, updated_at"
+        )
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select(
+          "id, email, full_name, role, bio, specialty, is_active, is_muted, created_at, updated_at"
+        )
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("exclusive_vault_items")
+        .select("*")
+        .order("is_featured", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("chat_channels")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+    ]);
 
     if (Array.isArray(waitlistRes.data)) {
       entries = waitlistRes.data as WaitlistEntry[];
     }
 
     if (Array.isArray(coursesRes.data)) {
+      const modulesByCourse = new Map<string, CourseModuleRecord[]>();
+      if (Array.isArray(modulesRes.data)) {
+        for (const mod of modulesRes.data as CourseModuleRecord[]) {
+          const list = modulesByCourse.get(mod.course_id) || [];
+          list.push(mod);
+          modulesByCourse.set(mod.course_id, list);
+        }
+      }
+
       const lessonsByCourse = new Map<string, LessonRecord[]>();
       if (Array.isArray(lessonsRes.data)) {
         for (const row of lessonsRes.data) {
           const item: LessonRecord = {
             id: row.id,
             course_id: row.course_id,
+            module_id: row.module_id,
             module_title: row.module_title,
             title: row.title,
             description: row.description,
@@ -151,6 +174,7 @@ export default async function AdminPage() {
 
       courses = coursesRes.data.map((c) => ({
         ...(c as CourseRecord),
+        modules: modulesByCourse.get(c.id) || [],
         lessons: lessonsByCourse.get(c.id) || [],
       }));
     }

@@ -34,6 +34,7 @@ export async function PATCH(
   }
 
   let body: {
+    module_id?: string | null;
     module_title?: string;
     title?: string;
     description?: string;
@@ -54,6 +55,9 @@ export async function PATCH(
   }
 
   const updates: Record<string, unknown> = {};
+  if (body.module_id !== undefined) {
+    updates.module_id = body.module_id || null;
+  }
   if (typeof body.module_title === "string") {
     updates.module_title = body.module_title.trim().slice(0, 120) || "المقدمة";
   }
@@ -100,7 +104,7 @@ export async function PATCH(
     .update(updates)
     .eq("id", id)
     .select(
-      "id, course_id, module_title, title, description, sort_order, duration_seconds, video_type, r2_key, hls_key_hex, is_published, created_at, updated_at"
+      "id, course_id, module_id, module_title, title, description, sort_order, duration_seconds, video_type, r2_key, hls_key_hex, is_published, created_at, updated_at"
     )
     .single();
 
@@ -114,6 +118,7 @@ export async function PATCH(
   const lesson: LessonRecord = {
     id: data.id,
     course_id: data.course_id,
+    module_id: data.module_id,
     module_title: data.module_title,
     title: data.title,
     description: data.description,

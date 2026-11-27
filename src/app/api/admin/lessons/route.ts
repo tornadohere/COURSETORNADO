@@ -30,6 +30,7 @@ export async function POST(req: Request) {
 
   let body: {
     course_id?: string;
+    module_id?: string | null;
     module_title?: string;
     title?: string;
     description?: string;
@@ -70,11 +71,28 @@ export async function POST(req: Request) {
     );
   }
 
+  const module_id = body.module_id ? String(body.module_id).trim() : null;
+  let resolvedModuleTitle = (body.module_title || "المقدمة")
+    .trim()
+    .slice(0, 120);
+
+  if (module_id) {
+    const { data: mod } = await supabase
+      .from("course_modules")
+      .select("title")
+      .eq("id", module_id)
+      .maybeSingle();
+    if (mod?.title) {
+      resolvedModuleTitle = mod.title;
+    }
+  }
+
   const { data, error } = await supabase
     .from("course_lessons")
     .insert({
       course_id,
-      module_title: (body.module_title || "المقدمة").trim().slice(0, 120),
+      module_id,
+      module_title: resolvedModuleTitle,
       title: title.slice(0, 180),
       description: (body.description || "").trim().slice(0, 2000),
       sort_order: Number.isFinite(body.sort_order)
@@ -89,7 +107,7 @@ export async function POST(req: Request) {
       is_published: body.is_published ?? true,
     })
     .select(
-      "id, course_id, module_title, title, description, sort_order, duration_seconds, video_type, r2_key, hls_key_hex, is_published, created_at, updated_at"
+      "id, course_id, module_id, module_title, title, description, sort_order, duration_seconds, video_type, r2_key, hls_key_hex, is_published, created_at, updated_at"
     )
     .single();
 
@@ -103,6 +121,7 @@ export async function POST(req: Request) {
   const lesson: LessonRecord = {
     id: data.id,
     course_id: data.course_id,
+    module_id: data.module_id,
     module_title: data.module_title,
     title: data.title,
     description: data.description,

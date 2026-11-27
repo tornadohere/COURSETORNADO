@@ -19,8 +19,11 @@ import {
   FolderUp,
   FileVideo,
   Layers,
+  FolderPlus,
+  Pencil,
 } from "lucide-react";
 import type {
+  CourseModuleRecord,
   CourseRecord,
   LessonRecord,
   LessonVideoType,
@@ -86,8 +89,15 @@ export function AdminCoursesTab({
   const [coursePublished, setCoursePublished] = useState(false);
   const [creatingCourse, setCreatingCourse] = useState(false);
 
+  // Create module (chapter) form
+  const [showModuleForm, setShowModuleForm] = useState(false);
+  const [moduleTitle, setModuleTitle] = useState("");
+  const [moduleDesc, setModuleDesc] = useState("");
+  const [creatingModule, setCreatingModule] = useState(false);
+
   // Create lesson + upload form
   const [showLessonForm, setShowLessonForm] = useState(false);
+  const [lessonModuleId, setLessonModuleId] = useState<string>("");
   const [lessonModule, setLessonModule] = useState("المقدمة");
   const [lessonTitle, setLessonTitle] = useState("");
   const [lessonDesc, setLessonDesc] = useState("");
@@ -117,6 +127,53 @@ export function AdminCoursesTab({
     () => courses.reduce((sum, c) => sum + (c.lessons?.length || 0), 0),
     [courses]
   );
+
+  // Group selected course lessons under explicit modules + any legacy module_title groups
+  const groupedModules = useMemo(() => {
+    if (!selectedCourse) return [];
+    const mods = [...(selectedCourse.modules || [])].sort(
+      (a, b) => a.sort_order - b.sort_order
+    );
+    const lessons = selectedCourse.lessons || [];
+    const usedLessonIds = new Set<string>();
+
+    const groups: {
+      id: string | null;
+      title: string;
+      description: string;
+      lessons: LessonRecord[];
+    }[] = mods.map((mod) => {
+      const modLessons = lessons.filter((l) => {
+        const match =
+          l.module_id === mod.id ||
+          (!l.module_id && l.module_title === mod.title);
+        if (match) usedLessonIds.add(l.id);
+        return match;
+      });
+      return {
+        id: mod.id,
+        title: mod.title,
+        description: mod.description,
+        lessons: modLessons,
+      };
+    });
+
+    const ungrouped = lessons.filter((l) => !usedLessonIds.has(l.id));
+    if (ungrouped.length > 0) {
+      const byTitle = new Map<string, LessonRecord[]>();
+      for (const l of ungrouped) {
+        const key = l.module_title || "عام";
+        const arr = byTitle.get(key) || [];
+        arr.push(l);
+        byTitle.set(key, arr);
+      }
+      for (const [title, arr] of byTitle.entries()) {
+        groups.push({ id: null, title, description: "", lessons: arr });
+      }
+    }
+
+    return groups;
+  }, [selectedCourse]);
 
   const publishedCoursesCount = useMemo(
     () => courses.filter((c) => c.is_published).length,
@@ -211,6 +268,128 @@ export function AdminCoursesTab({
     }
   };
 
+  const handleCreateModule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCourse || !moduleTitle.trim() || creatingModule) return;
+    setCreatingModule(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const res = await fetch("/api/admin/modules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          course_id: selectedCourse.id,
+          title: moduleTitle.trim(),
+          description: moduleDesc.trim(),
+          sort_order: (selectedCourse.modules?.length || 0) + 1,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.ok && data.module) {
+        const created = data.module as CourseModuleRecord;
+        setCourses((prev) =>
+          prev.map((c) =>
+            c.id === selectedCourse.id
+              ? { ...c, modules: [...(c.modules || []), created] }
+              : c
+          )
+        );
+        setLessonModuleId(created.id);
+        setLessonModule(created.title);
+        setModuleTitle("");
+        setModuleDesc("");
+        setShowModuleForm(false);
+        setSuccessMsg(`تم إنشاء فصل "${created.title}" بنجاح.`);
+      } else {
+        setError(data?.error || "تعذر إنشاء الفصل.");
+      }
+    } catch {
+      setError("تعذر إنشاء الفصل.");
+    } finally {
+      setCreatingModule(false);
+    }
+  };
+
+  const handleRenameModule = async (modId: string, currentTitle: string) => {
+    if (!selectedCourse) return;
+    const nextTitle = window.prompt("أدخل الاسم الجديد للفصل:", currentTitle);
+    if (!nextTitle || nextTitle.trim().length < 2 || nextTitle.trim() === currentTitle) {
+      return;
+    }
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/modules/${modId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: nextTitle.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.ok) {
+        setCourses((prev) =>
+          prev.map((c) =>
+            c.id === selectedCourse.id
+              ? {
+                  ...c,
+                  modules: (c.modules || []).map((m) =>
+                    m.id === modId ? { ...m, title: nextTitle.trim() } : m
+                  ),
+                  lessons: (c.lessons || []).map((l) =>
+                    l.module_id === modId
+                      ? { ...l, module_title: nextTitle.trim() }
+                      : l
+                  ),
+                }
+              : c
+          )
+        );
+      } else {
+        setError(data?.error || "تعذر تعديل اسم الفصل.");
+      }
+    } catch {
+      setError("تعذر تعديل اسم الفصل.");
+    }
+  };
+
+  const handleDeleteModule = async (modId: string, title: string) => {
+    if (!selectedCourse) return;
+    if (
+      !window.confirm(
+        `حذف فصل "${title}"؟ (الدروس الموجودة بداخله لن تُحذف بل ستنتقل إلى "عام").`
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/modules/${modId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.ok) {
+        setCourses((prev) =>
+          prev.map((c) =>
+            c.id === selectedCourse.id
+              ? {
+                  ...c,
+                  modules: (c.modules || []).filter((m) => m.id !== modId),
+                  lessons: (c.lessons || []).map((l) =>
+                    l.module_id === modId
+                      ? { ...l, module_id: null, module_title: "عام" }
+                      : l
+                  ),
+                }
+              : c
+          )
+        );
+      } else {
+        setError(data?.error || "تعذر حذف الفصل.");
+      }
+    } catch {
+      setError("تعذر حذف الفصل.");
+    }
+  };
+
   const handleCreateLessonAndUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCourse || !lessonTitle.trim() || uploading) return;
@@ -253,6 +432,7 @@ export function AdminCoursesTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           course_id: selectedCourse.id,
+          module_id: lessonModuleId || null,
           module_title: lessonModule.trim() || "المقدمة",
           title: lessonTitle.trim(),
           description: lessonDesc.trim(),
@@ -658,18 +838,77 @@ export function AdminCoursesTab({
                     <p className="admin-panel-sub">{selectedCourse.description}</p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  className="admin-btn-accent"
-                  onClick={() => {
-                    setLessonOrder((selectedCourse.lessons?.length || 0) + 1);
-                    setShowLessonForm((v) => !v);
-                  }}
-                >
-                  {showLessonForm ? <X size={15} /> : <Upload size={15} />}
-                  <span>{showLessonForm ? "إغلاق" : "رفع درس جديد"}</span>
-                </button>
+                <div className="admin-row-actions">
+                  <button
+                    type="button"
+                    className="admin-btn-secondary"
+                    onClick={() => {
+                      setShowModuleForm((v) => !v);
+                      setShowLessonForm(false);
+                    }}
+                  >
+                    {showModuleForm ? <X size={15} /> : <FolderPlus size={15} />}
+                    <span>{showModuleForm ? "إغلاق" : "فصل جديد"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-btn-accent"
+                    onClick={() => {
+                      setLessonOrder((selectedCourse.lessons?.length || 0) + 1);
+                      const firstMod = selectedCourse.modules?.[0];
+                      if (firstMod && !lessonModuleId) {
+                        setLessonModuleId(firstMod.id);
+                        setLessonModule(firstMod.title);
+                      }
+                      setShowLessonForm((v) => !v);
+                      setShowModuleForm(false);
+                    }}
+                  >
+                    {showLessonForm ? <X size={15} /> : <Upload size={15} />}
+                    <span>{showLessonForm ? "إغلاق" : "رفع درس جديد"}</span>
+                  </button>
+                </div>
               </div>
+
+              {showModuleForm && (
+                <form className="admin-inline-form" onSubmit={handleCreateModule}>
+                  <div className="admin-form-row-2">
+                    <div className="admin-field">
+                      <label>اسم الفصل / المجموعة</label>
+                      <input
+                        type="text"
+                        className="admin-input no-start-icon no-end-icon"
+                        placeholder="مثال: أساسيات الـ AI"
+                        value={moduleTitle}
+                        onChange={(e) => setModuleTitle(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="admin-field">
+                      <label>وصف الفصل (اختياري)</label>
+                      <input
+                        type="text"
+                        className="admin-input no-start-icon no-end-icon"
+                        placeholder="مثال: مدخل عملي قبل بناء المشاريع"
+                        value={moduleDesc}
+                        onChange={(e) => setModuleDesc(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="admin-btn-primary"
+                    disabled={creatingModule}
+                  >
+                    {creatingModule ? (
+                      <Loader2 size={16} className="admin-spin" />
+                    ) : (
+                      <FolderPlus size={16} />
+                    )}
+                    <span>حفظ الفصل</span>
+                  </button>
+                </form>
+              )}
 
               {showLessonForm && (
                 <form
@@ -689,14 +928,36 @@ export function AdminCoursesTab({
                       />
                     </div>
                     <div className="admin-field">
-                      <label>القسم / الوحدة (Module)</label>
-                      <input
-                        type="text"
-                        className="admin-input no-start-icon no-end-icon"
-                        placeholder="المقدمة"
-                        value={lessonModule}
-                        onChange={(e) => setLessonModule(e.target.value)}
-                      />
+                      <label>الفصل / المجموعة</label>
+                      {(selectedCourse.modules?.length || 0) > 0 ? (
+                        <select
+                          className="admin-select"
+                          value={lessonModuleId}
+                          onChange={(e) => {
+                            const id = e.target.value;
+                            setLessonModuleId(id);
+                            const found = selectedCourse.modules?.find(
+                              (m) => m.id === id
+                            );
+                            if (found) setLessonModule(found.title);
+                          }}
+                        >
+                          <option value="">-- عام / بدون فصل --</option>
+                          {(selectedCourse.modules || []).map((mod) => (
+                            <option key={mod.id} value={mod.id}>
+                              {mod.title}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          className="admin-input no-start-icon no-end-icon"
+                          placeholder="مثال: أساسيات الـ AI"
+                          value={lessonModule}
+                          onChange={(e) => setLessonModule(e.target.value)}
+                        />
+                      )}
                     </div>
                   </div>
 
@@ -859,63 +1120,149 @@ export function AdminCoursesTab({
                 </form>
               )}
 
-              {/* Lessons list */}
-              {(selectedCourse.lessons?.length || 0) === 0 ? (
+              {/* Modules & Lessons grouped view */}
+              {groupedModules.length === 0 ? (
                 <div className="admin-empty">
-                  <Video size={26} />
-                  <p>لا توجد دروس في هذا الكورس بعد.</p>
+                  <FolderPlus size={26} />
+                  <p>
+                    ابدأ بإنشاء فصل (مثل: أساسيات الـ AI) ثم ارفع الفيديوهات
+                    بداخله.
+                  </p>
                 </div>
               ) : (
-                <div className="admin-lesson-list">
-                  {(selectedCourse.lessons || []).map((lesson, idx) => (
-                    <div key={lesson.id} className="admin-lesson-row">
-                      <div className="admin-lesson-num">{idx + 1}</div>
-                      <div className="admin-lesson-info">
-                        <div className="admin-lesson-title">{lesson.title}</div>
-                        <div className="admin-lesson-meta">
-                          <span>{lesson.module_title}</span>
-                          <span>·</span>
-                          <span className="admin-pill-mini">
-                            {lesson.video_type === "hls"
-                              ? lesson.has_hls_encryption
-                                ? "HLS مشفر AES-128"
-                                : "HLS"
-                              : "MP4 محمي"}
-                          </span>
-                          {!lesson.has_video && (
-                            <span className="admin-badge is-archived">
-                              بدون فيديو
+                <div className="admin-modules-stack">
+                  {groupedModules.map((group) => (
+                    <div
+                      key={group.id || `legacy-${group.title}`}
+                      className="admin-module-card"
+                    >
+                      <div className="admin-module-card-head">
+                        <div>
+                          <div className="admin-module-card-title">
+                            <Layers size={15} />
+                            <span>{group.title}</span>
+                            <span className="admin-pill-mini">
+                              {group.lessons.length} دروس
                             </span>
+                          </div>
+                          {group.description && (
+                            <p className="admin-module-card-desc">
+                              {group.description}
+                            </p>
                           )}
                         </div>
-                      </div>
-                      <div className="admin-lesson-actions">
-                        {lesson.has_video && (
+
+                        <div className="admin-row-actions">
                           <button
                             type="button"
                             className="admin-btn-secondary"
-                            onClick={() => handlePreviewLesson(lesson)}
-                            disabled={loadingPreviewId === lesson.id}
+                            onClick={() => {
+                              setLessonModuleId(group.id || "");
+                              setLessonModule(group.title);
+                              setLessonOrder(
+                                (selectedCourse.lessons?.length || 0) + 1
+                              );
+                              setShowLessonForm(true);
+                              setShowModuleForm(false);
+                            }}
                           >
-                            {loadingPreviewId === lesson.id ? (
-                              <Loader2 size={14} className="admin-spin" />
-                            ) : (
-                              <Play size={14} />
-                            )}
-                            <span>معاينة</span>
+                            <Plus size={14} />
+                            <span>رفع فيديو هنا</span>
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          className="admin-icon-btn is-danger"
-                          title="حذف الدرس"
-                          onClick={() =>
-                            handleDeleteLesson(selectedCourse.id, lesson)
-                          }
-                        >
-                          <Trash2 size={15} />
-                        </button>
+
+                          {group.id && (
+                            <>
+                              <button
+                                type="button"
+                                className="admin-icon-btn"
+                                title="تعديل اسم الفصل"
+                                onClick={() =>
+                                  handleRenameModule(group.id!, group.title)
+                                }
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-icon-btn is-danger"
+                                title="حذف الفصل"
+                                onClick={() =>
+                                  handleDeleteModule(group.id!, group.title)
+                                }
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
+
+                      {group.lessons.length === 0 ? (
+                        <div className="admin-module-empty">
+                          لا توجد فيديوهات في هذا الفصل بعد — اضغط &quot;رفع فيديو
+                          هنا&quot; لإضافة أول درس.
+                        </div>
+                      ) : (
+                        <div className="admin-lesson-list">
+                          {group.lessons.map((lesson, idx) => (
+                            <div key={lesson.id} className="admin-lesson-row">
+                              <div className="admin-lesson-num">{idx + 1}</div>
+                              <div className="admin-lesson-info">
+                                <div className="admin-lesson-title">
+                                  {lesson.title}
+                                </div>
+                                <div className="admin-lesson-meta">
+                                  <span className="admin-pill-mini">
+                                    {lesson.video_type === "hls"
+                                      ? lesson.has_hls_encryption
+                                        ? "HLS مشفر AES-128"
+                                        : "HLS"
+                                      : "MP4 محمي"}
+                                  </span>
+                                  {!lesson.has_video && (
+                                    <span className="admin-badge is-archived">
+                                      بدون فيديو
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="admin-lesson-actions">
+                                {lesson.has_video && (
+                                  <button
+                                    type="button"
+                                    className="admin-btn-secondary"
+                                    onClick={() => handlePreviewLesson(lesson)}
+                                    disabled={loadingPreviewId === lesson.id}
+                                  >
+                                    {loadingPreviewId === lesson.id ? (
+                                      <Loader2
+                                        size={14}
+                                        className="admin-spin"
+                                      />
+                                    ) : (
+                                      <Play size={14} />
+                                    )}
+                                    <span>معاينة</span>
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className="admin-icon-btn is-danger"
+                                  title="حذف الدرس"
+                                  onClick={() =>
+                                    handleDeleteLesson(
+                                      selectedCourse.id,
+                                      lesson
+                                    )
+                                  }
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
