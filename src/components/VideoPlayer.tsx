@@ -28,6 +28,9 @@ interface VideoPlayerProps {
   isEn: boolean;
   autoPlay?: boolean;
   loop?: boolean;
+  isHls?: boolean;
+  watermarkText?: string;
+  protectedMode?: boolean;
 }
 
 const SPEED_OPTIONS = [1, 1.25, 1.5, 2] as const;
@@ -42,7 +45,16 @@ function formatTime(seconds: number): string {
 
 export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
   function VideoPlayer(
-    { src, poster, isEn, autoPlay = true, loop = true },
+    {
+      src,
+      poster,
+      isEn,
+      autoPlay = true,
+      loop = true,
+      isHls = false,
+      watermarkText,
+      protectedMode = false,
+    },
     ref
   ) {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -60,6 +72,68 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
     const [isSeeking, setIsSeeking] = useState(false);
+    const [wmPos, setWmPos] = useState({ top: 14, left: 14 });
+
+    const useHlsEngine =
+      isHls || src.includes(".m3u8") || src.includes("/manifest");
+
+    // Periodically reposition watermark overlay to deter screen recording
+    useEffect(() => {
+      if (!watermarkText) return;
+      const move = () => {
+        const top = 10 + Math.floor(Math.random() * 68);
+        const left = 8 + Math.floor(Math.random() * 58);
+        setWmPos({ top, left });
+      };
+      move();
+      const id = window.setInterval(move, 9000);
+      return () => window.clearInterval(id);
+    }, [watermarkText]);
+
+    // Attach HLS.js or native source whenever src changes
+    useEffect(() => {
+      const vid = videoRef.current;
+      if (!vid || !src) return;
+
+      let hlsInstance: { destroy: () => void } | null = null;
+      let cancelled = false;
+
+      if (useHlsEngine) {
+        if (vid.canPlayType("application/vnd.apple.mpegurl")) {
+          vid.src = src;
+        } else {
+          import("hls.js").then(({ default: Hls }) => {
+            if (cancelled || !videoRef.current) return;
+            if (Hls.isSupported()) {
+              const hls = new Hls({
+                enableWorker: true,
+                xhrSetup: (xhr, url) => {
+                  // Send session cookies only to our own origin (manifest + AES key API)
+                  if (
+                    url.startsWith("/") ||
+                    url.startsWith(window.location.origin)
+                  ) {
+                    xhr.withCredentials = true;
+                  }
+                },
+              });
+              hls.loadSource(src);
+              hls.attachMedia(videoRef.current);
+              hlsInstance = hls;
+            }
+          });
+        }
+      } else {
+        vid.src = src;
+      }
+
+      return () => {
+        cancelled = true;
+        if (hlsInstance) {
+          hlsInstance.destroy();
+        }
+      };
+    }, [src, useHlsEngine]);
 
     const clearHideTimer = useCallback(() => {
       if (hideTimerRef.current !== null) {
@@ -336,15 +410,31 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
           }
         }}
         onKeyDown={handleKeyDown}
+        onContextMenu={
+          protectedMode || watermarkText
+            ? (e) => e.preventDefault()
+            : undefined
+        }
       >
         <video
           ref={videoRef}
           className="ta-vp-video"
-          src={src}
+          src={useHlsEngine ? undefined : src}
           poster={poster}
           loop={loop}
           playsInline
           preload="metadata"
+          controlsList={
+            protectedMode || watermarkText
+              ? "nodownload noplaybackrate"
+              : undefined
+          }
+          disablePictureInPicture={Boolean(protectedMode || watermarkText)}
+          onContextMenu={
+            protectedMode || watermarkText
+              ? (e) => e.preventDefault()
+              : undefined
+          }
           onClick={togglePlay}
           onPlay={() => {
             setIsPlaying(true);
@@ -378,6 +468,33 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
             setVolume(e.currentTarget.volume);
           }}
         />
+
+        {/* Moving anti-piracy watermark overlay */}
+        {watermarkText && (
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: `${wmPos.top}%`,
+              left: `${wmPos.left}%`,
+              pointerEvents: "none",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              padding: "4px 10px",
+              borderRadius: "8px",
+              background: "rgba(5, 6, 8, 0.36)",
+              color: "rgba(255, 255, 255, 0.34)",
+              fontSize: "11.5px",
+              fontWeight: 600,
+              letterSpacing: "0.02em",
+              zIndex: 6,
+              transition: "top 1.6s ease, left 1.6s ease",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {watermarkText}
+          </div>
+        )}
 
         {/* Top-end unmute prompt pill when playing muted */}
         {isMuted && (

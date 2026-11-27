@@ -182,6 +182,305 @@ create policy "Admins can delete waitlist"
   using (public.is_admin());
 
 -- ============================================================================
+-- 9. Extended Profile Columns (Student Settings, Moderation, Single Session)
+-- ============================================================================
+alter table public.profiles add column if not exists bio text not null default '';
+alter table public.profiles add column if not exists specialty text not null default '';
+alter table public.profiles add column if not exists is_active boolean not null default true;
+alter table public.profiles add column if not exists is_muted boolean not null default false;
+alter table public.profiles add column if not exists active_session_token text not null default '';
+
+create or replace function public.is_active_member()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and is_active = true
+  );
+$$;
+
+-- Allow active students to update their own safe profile fields (name, bio, specialty)
+-- Role, is_active, and is_muted cannot be escalated by non-admins
+drop policy if exists "Users can update own safe profile fields" on public.profiles;
+create policy "Users can update own safe profile fields"
+  on public.profiles
+  for update
+  to authenticated
+  using (auth.uid() = id)
+  with check (
+    auth.uid() = id
+    and role = (select p.role from public.profiles p where p.id = auth.uid())
+    and is_active = (select p.is_active from public.profiles p where p.id = auth.uid())
+    and is_muted = (select p.is_muted from public.profiles p where p.id = auth.uid())
+  );
+
+-- ============================================================================
+-- 10. Courses & Lessons (Protected Cloudflare R2 Video Delivery)
+-- ============================================================================
+create table if not exists public.courses (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null check (char_length(trim(slug)) between 2 and 120),
+  title text not null check (char_length(trim(title)) between 2 and 180),
+  description text not null default '',
+  thumbnail_url text not null default '',
+  sort_order integer not null default 0,
+  is_published boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists courses_sort_order_idx on public.courses (sort_order asc, created_at desc);
+
+drop trigger if exists courses_set_updated_at on public.courses;
+create trigger courses_set_updated_at
+  before update on public.courses
+  for each row execute function public.set_updated_at();
+
+alter table public.courses enable row level security;
+
+drop policy if exists "Admins can manage courses" on public.courses;
+create policy "Admins can manage courses"
+  on public.courses
+  for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Active members can read published courses" on public.courses;
+create policy "Active members can read published courses"
+  on public.courses
+  for select
+  to authenticated
+  using (is_published = true and public.is_active_member());
+
+create table if not exists public.course_lessons (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses(id) on delete cascade,
+  module_title text not null default 'المقدمة',
+  title text not null check (char_length(trim(title)) between 2 and 180),
+  description text not null default '',
+  sort_order integer not null default 0,
+  duration_seconds integer not null default 0,
+  video_type text not null default 'hls' check (video_type in ('hls', 'mp4')),
+  r2_key text not null default '',
+  hls_key_hex text not null default '',
+  is_published boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists course_lessons_course_idx
+  on public.course_lessons (course_id, sort_order asc, created_at asc);
+
+drop trigger if exists course_lessons_set_updated_at on public.course_lessons;
+create trigger course_lessons_set_updated_at
+  before update on public.course_lessons
+  for each row execute function public.set_updated_at();
+
+alter table public.course_lessons enable row level security;
+
+drop policy if exists "Admins can manage lessons" on public.course_lessons;
+create policy "Admins can manage lessons"
+  on public.course_lessons
+  for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- Active members can read published lessons of published courses
+-- Note: r2_key & hls_key_hex are NEVER exposed to the browser; only server APIs read them.
+drop policy if exists "Active members can read published lessons" on public.course_lessons;
+create policy "Active members can read published lessons"
+  on public.course_lessons
+  for select
+  to authenticated
+  using (
+    is_published = true
+    and public.is_active_member()
+    and exists (
+      select 1 from public.courses c
+      where c.id = course_lessons.course_id
+        and c.is_published = true
+    )
+  );
+
+create table if not exists public.lesson_progress (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  lesson_id uuid not null references public.course_lessons(id) on delete cascade,
+  completed boolean not null default true,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, lesson_id)
+);
+
+alter table public.lesson_progress enable row level security;
+
+drop policy if exists "Users can manage own lesson progress" on public.lesson_progress;
+create policy "Users can manage own lesson progress"
+  on public.lesson_progress
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- ============================================================================
+-- 11. Discord-Style Community Channels & Realtime Chat
+-- ============================================================================
+create table if not exists public.chat_channels (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null check (char_length(trim(slug)) between 2 and 80),
+  name text not null check (char_length(trim(name)) between 2 and 80),
+  description text not null default '',
+  is_readonly boolean not null default false,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.chat_channels enable row level security;
+
+drop policy if exists "Admins can manage chat channels" on public.chat_channels;
+create policy "Admins can manage chat channels"
+  on public.chat_channels
+  for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Active members can read chat channels" on public.chat_channels;
+create policy "Active members can read chat channels"
+  on public.chat_channels
+  for select
+  to authenticated
+  using (public.is_active_member());
+
+-- Seed default Discord-style community rooms
+insert into public.chat_channels (slug, name, description, is_readonly, sort_order)
+values
+  ('announcements', 'إعلانات وتحديثات', 'آخر تحديثات الأكاديمية والدروس والـ Skills الجديدة من الإدارة.', true, 0),
+  ('general', 'شات عام', 'دردشة مفتوحة بين أعضاء مجتمع Tornado Academy وتبادل الخبرات.', false, 1),
+  ('help', 'طلبات مساعدة', 'اسأل عن أي مشكلة تقنية أو خطوة في الكورس والمجتمع هيساعدك.', false, 2),
+  ('projects', 'تعاون مشاريع', 'اعرض مشروعك، دوّر على شركاء تنفيذ، أو شارك نتائج شغلك.', false, 3)
+on conflict (slug) do nothing;
+
+create table if not exists public.chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  channel_id uuid not null references public.chat_channels(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  author_name text not null default 'عضو',
+  author_role text not null default 'user' check (author_role in ('user', 'admin')),
+  content text not null check (char_length(trim(content)) between 1 and 4000),
+  reply_to_id uuid references public.chat_messages(id) on delete set null,
+  reply_preview text not null default '',
+  created_at timestamptz not null default now()
+);
+
+create index if not exists chat_messages_channel_created_idx
+  on public.chat_messages (channel_id, created_at desc);
+
+alter table public.chat_messages enable row level security;
+
+drop policy if exists "Active members can read chat messages" on public.chat_messages;
+create policy "Active members can read chat messages"
+  on public.chat_messages
+  for select
+  to authenticated
+  using (public.is_active_member());
+
+drop policy if exists "Active non-muted members can post messages" on public.chat_messages;
+create policy "Active non-muted members can post messages"
+  on public.chat_messages
+  for insert
+  to authenticated
+  with check (
+    auth.uid() = user_id
+    and public.is_active_member()
+    and (
+      public.is_admin()
+      or (
+        not exists (
+          select 1 from public.profiles p
+          where p.id = auth.uid() and p.is_muted = true
+        )
+        and not exists (
+          select 1 from public.chat_channels ch
+          where ch.id = channel_id and ch.is_readonly = true
+        )
+      )
+    )
+  );
+
+drop policy if exists "Admins or authors can delete chat messages" on public.chat_messages;
+create policy "Admins or authors can delete chat messages"
+  on public.chat_messages
+  for delete
+  to authenticated
+  using (public.is_admin() or auth.uid() = user_id);
+
+-- Enable Supabase Realtime for live community chat
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'chat_messages'
+  ) then
+    alter publication supabase_realtime add table public.chat_messages;
+  end if;
+end $$;
+
+-- ============================================================================
+-- 12. Exclusive Student Vault (Skills & Prompts for Members Only)
+-- ============================================================================
+create table if not exists public.exclusive_vault_items (
+  id uuid primary key default gen_random_uuid(),
+  type text not null default 'prompt' check (type in ('prompt', 'skill')),
+  category text not null default 'coding' check (category in ('coding', 'video', 'design', 'marketing', 'general')),
+  title text not null check (char_length(trim(title)) between 2 and 180),
+  tag text not null default '',
+  description text not null default '',
+  how_to text not null default '',
+  file_name text not null default 'skill.md',
+  install_cmd text not null default '',
+  content text not null default '',
+  is_featured boolean not null default false,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists exclusive_vault_sort_idx
+  on public.exclusive_vault_items (is_featured desc, sort_order asc, created_at desc);
+
+drop trigger if exists exclusive_vault_set_updated_at on public.exclusive_vault_items;
+create trigger exclusive_vault_set_updated_at
+  before update on public.exclusive_vault_items
+  for each row execute function public.set_updated_at();
+
+alter table public.exclusive_vault_items enable row level security;
+
+drop policy if exists "Admins can manage exclusive vault" on public.exclusive_vault_items;
+create policy "Admins can manage exclusive vault"
+  on public.exclusive_vault_items
+  for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "Active members can read exclusive vault" on public.exclusive_vault_items;
+create policy "Active members can read exclusive vault"
+  on public.exclusive_vault_items
+  for select
+  to authenticated
+  using (public.is_active_member());
+
+-- ============================================================================
 -- HOW TO CREATE YOUR ADMIN ACCOUNT (NO PASSWORDS IN CODE OR .ENV)
 -- ============================================================================
 -- Step 1: In Supabase Dashboard -> Authentication -> Users -> "Add user" -> "Create new user"

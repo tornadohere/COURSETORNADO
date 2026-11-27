@@ -716,3 +716,510 @@
 .admin-spin {
   animation: admin-spin 0.9s linear infinite;
 }
+
+
+/* ============================================================================
+   Admin Tabs, Courses, Students, Exclusive Vault & Channels Extensions
+   ============================================================================ */
+.admin-nav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 6px;
+  border-radius: 16px;
+  background: rgba(15, 17, 22, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-nav-tab {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(229, 228, 226, 0.68);
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-nav-tab:hover {
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-nav-tab.is-active {
+  background: #fafafa;
+  color: #050608;
+  font-weight: 700;
+}
+
+.admin-tab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-alert.is-warning {
+  background: rgba(245, 158, 11, 0.11);
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  color: #fde68a;
+}
+
+.admin-alert.is-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+}
+
+.admin-alert.is-success {
+  background: rgba(34, 184, 102, 0.12);
+  border: 1px solid rgba(34, 184, 102, 0.34);
+  color: #bbf7d0;
+}
+
+.admin-panel {
+  background: rgba(15, 17, 22, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: clamp(18px, 2.5vw, 24px);
+}
+
+.admin-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.admin-panel-title {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #fafafa;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.admin-panel-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: rgba(229, 228, 226, 0.58);
+}
+
+.admin-courses-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .admin-courses-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-course-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.admin-course-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-course-item.is-active {
+  border-color: rgba(182, 198, 188, 0.5);
+  background: rgba(182, 198, 188, 0.09);
+}
+
+.admin-course-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 4px;
+}
+
+.admin-course-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(229, 228, 226, 0.6);
+}
+
+.admin-course-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-inline-form {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  margin-bottom: 18px;
+}
+
+.admin-form-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 720px) {
+  .admin-form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-textarea,
+.admin-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fafafa;
+  font-size: 14px;
+  padding: 11px 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.admin-select {
+  height: 46px;
+}
+
+.admin-select option {
+  background: #0f1116;
+  color: #fafafa;
+}
+
+.admin-textarea:focus,
+.admin-select:focus {
+  border-color: rgba(182, 198, 188, 0.55);
+}
+
+.admin-check-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: rgba(229, 228, 226, 0.85);
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+
+.admin-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .admin-mode-switch {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-mode-btn {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(229, 228, 226, 0.72);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.admin-mode-btn.is-active {
+  border-color: rgba(182, 198, 188, 0.55);
+  background: rgba(182, 198, 188, 0.14);
+  color: #ffffff;
+}
+
+.admin-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px 16px;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(229, 228, 226, 0.78);
+  font-size: 13.5px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.admin-dropzone:hover {
+  border-color: rgba(182, 198, 188, 0.6);
+  background: rgba(182, 198, 188, 0.06);
+}
+
+.admin-progress-box {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-progress-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  margin-bottom: 8px;
+  color: rgba(229, 228, 226, 0.85);
+}
+
+.admin-progress-track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.admin-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b6c6bc, #fafafa);
+  transition: width 0.2s ease;
+}
+
+.admin-lesson-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-lesson-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-lesson-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #b6c6bc;
+  flex-shrink: 0;
+}
+
+.admin-lesson-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-lesson-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 3px;
+}
+
+.admin-lesson-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(229, 228, 226, 0.58);
+}
+
+.admin-lesson-actions,
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.admin-pill-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.07);
+  color: #e5e4e2;
+}
+
+.admin-pill-mini.is-gold {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fde68a;
+}
+
+.admin-student-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-channel-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(200px, 1.4fr) auto auto;
+  gap: 12px;
+  align-items: end;
+}
+
+@media (max-width: 1024px) {
+  .admin-student-form,
+  .admin-channel-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-student-form,
+  .admin-channel-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-creds-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(34, 184, 102, 0.12);
+  border: 1px solid rgba(34, 184, 102, 0.36);
+  color: #dcfce7;
+}
+
+.admin-creds-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.admin-vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.admin-vault-card {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-vault-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-vault-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-vault-title {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.admin-vault-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(229, 228, 226, 0.65);
+}
+
+.admin-vault-foot {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 12px;
+  color: #b6c6bc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.admin-modal-card {
+  width: 100%;
+  max-width: 860px;
+  background: #0f1116;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.admin-icon-btn.is-danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}

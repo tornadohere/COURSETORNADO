@@ -22,18 +22,39 @@ import {
   Database,
   Inbox,
   Loader2,
+  BookOpen,
+  Sparkles,
+  Hash,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import type {
   AdminProfile,
+  ChatChannelRecord,
+  CourseRecord,
+  ExclusiveVaultItem,
+  MemberProfile,
   WaitlistEntry,
   WaitlistStats,
   WaitlistStatus,
 } from "@/lib/supabase/types";
+import { AdminCoursesTab } from "./AdminCoursesTab";
+import { AdminStudentsTab } from "./AdminStudentsTab";
+import { AdminVaultTab } from "./AdminVaultTab";
+import { AdminChannelsTab } from "./AdminChannelsTab";
+
+type AdminTab = "waitlist" | "courses" | "students" | "vault" | "channels";
 
 interface AdminDashboardProps {
   profile: AdminProfile;
   initialEntries: WaitlistEntry[];
   initialStats: WaitlistStats;
+  initialCourses: CourseRecord[];
+  initialStudents: MemberProfile[];
+  initialVaultItems: ExclusiveVaultItem[];
+  initialChannels: ChatChannelRecord[];
+  r2Configured: boolean;
+  serviceRoleConfigured: boolean;
 }
 
 const STATUS_LABELS: Record<WaitlistStatus, string> = {
@@ -119,8 +140,20 @@ export function AdminDashboard({
   profile,
   initialEntries,
   initialStats,
+  initialCourses,
+  initialStudents,
+  initialVaultItems,
+  initialChannels,
+  r2Configured,
+  serviceRoleConfigured,
 }: AdminDashboardProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<AdminTab>("courses");
+  const [waitlistPrefill, setWaitlistPrefill] = useState<{
+    id: string;
+    name: string;
+    phone: string;
+  } | null>(null);
   const [entries, setEntries] = useState<WaitlistEntry[]>(initialEntries);
   const [stats, setStats] = useState<WaitlistStats>(initialStats);
   const [statusFilter, setStatusFilter] = useState<"all" | WaitlistStatus>(
@@ -369,6 +402,11 @@ export function AdminDashboard({
           </div>
 
           <div className="admin-topbar-actions">
+            <Link href="/dashboard" className="admin-btn-secondary">
+              <ExternalLink size={15} aria-hidden="true" />
+              <span>واجهة الطالب</span>
+            </Link>
+
             <button
               type="button"
               className="admin-btn-secondary"
@@ -395,6 +433,85 @@ export function AdminDashboard({
           </div>
         </header>
 
+        {/* Primary Section Tabs */}
+        <nav className="admin-nav-tabs" aria-label="أقسام لوحة التحكم">
+          <button
+            type="button"
+            className={`admin-nav-tab${activeTab === "courses" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("courses")}
+          >
+            <BookOpen size={15} aria-hidden="true" />
+            <span>الكورسات والفيديوهات</span>
+          </button>
+          <button
+            type="button"
+            className={`admin-nav-tab${activeTab === "students" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("students")}
+          >
+            <UserPlus size={15} aria-hidden="true" />
+            <span>حسابات الطلاب</span>
+          </button>
+          <button
+            type="button"
+            className={`admin-nav-tab${activeTab === "vault" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("vault")}
+          >
+            <Sparkles size={15} aria-hidden="true" />
+            <span>الخزنة الحصرية</span>
+          </button>
+          <button
+            type="button"
+            className={`admin-nav-tab${activeTab === "channels" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("channels")}
+          >
+            <Hash size={15} aria-hidden="true" />
+            <span>قنوات المجتمع</span>
+          </button>
+          <button
+            type="button"
+            className={`admin-nav-tab${activeTab === "waitlist" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("waitlist")}
+          >
+            <Users size={15} aria-hidden="true" />
+            <span>قائمة الانتظار ({stats.total})</span>
+          </button>
+        </nav>
+
+        {activeTab === "courses" && (
+          <AdminCoursesTab
+            initialCourses={initialCourses}
+            r2Configured={r2Configured}
+          />
+        )}
+
+        {activeTab === "students" && (
+          <AdminStudentsTab
+            initialStudents={initialStudents}
+            serviceRoleConfigured={serviceRoleConfigured}
+            prefillFromWaitlist={waitlistPrefill}
+            onClearPrefill={() => setWaitlistPrefill(null)}
+            onWaitlistEnrolled={(waitlistId) => {
+              const next = entries.map((item) =>
+                item.id === waitlistId
+                  ? { ...item, status: "enrolled" as WaitlistStatus }
+                  : item
+              );
+              setEntries(next);
+              setStats(recomputeStats(next));
+            }}
+          />
+        )}
+
+        {activeTab === "vault" && (
+          <AdminVaultTab initialItems={initialVaultItems} />
+        )}
+
+        {activeTab === "channels" && (
+          <AdminChannelsTab initialChannels={initialChannels} />
+        )}
+
+        {activeTab === "waitlist" && (
+          <>
         {/* KPI Cards */}
         <section className="admin-kpi-grid" aria-label="إحصائيات سريعة">
           <div className="admin-kpi-card">
@@ -717,6 +834,22 @@ export function AdminDashboard({
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <button
                               type="button"
+                              className="admin-icon-btn"
+                              title="تحويل إلى حساب طالب"
+                              aria-label="تحويل إلى حساب طالب"
+                              onClick={() => {
+                                setWaitlistPrefill({
+                                  id: entry.id,
+                                  name: entry.name,
+                                  phone: entry.phone,
+                                });
+                                setActiveTab("students");
+                              }}
+                            >
+                              <UserPlus size={14} />
+                            </button>
+                            <button
+                              type="button"
                               className="admin-icon-btn danger"
                               title={
                                 isDeletingConfirm
@@ -759,6 +892,8 @@ export function AdminDashboard({
             </div>
           )}
         </section>
+          </>
+        )}
 
         {/* System Status Footer Strip */}
         <footer className="admin-footer-strip">
